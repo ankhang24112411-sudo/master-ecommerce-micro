@@ -71,3 +71,7 @@ services:
 
 volumes:
   product_postgres_data:
+  zookeeper-data:
+  kafka-data:
+  redis-data:
+  redis-insight-data:

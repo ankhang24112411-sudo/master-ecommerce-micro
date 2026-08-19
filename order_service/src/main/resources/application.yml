@@ -1,7 +1,10 @@
 spring:
   application:
     name: order_service
-
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5436/order_db}
+    username: postgres
+    password: password
   kafka:
     bootstrap-servers: localhost:9092
     producer:

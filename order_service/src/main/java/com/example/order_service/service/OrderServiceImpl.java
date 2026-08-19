@@ -12,6 +12,7 @@ import com.example.order_service.exception.ApplicationErrors;
 import com.example.order_service.repository.OrderItemRepository;
 import com.example.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
     private final ProductClient productClient;
@@ -88,6 +90,7 @@ public class OrderServiceImpl implements OrderService{
         productClient.decreaseQuantityByIds(buyProducts);
         OrderEntity createdOrder = orderRepository.save(savedOrder);
         kafkaTemplate.send("order_created", createdOrder);
+        log.info("Publish new order success to order_created");
         return createdOrder;
     }
 }
