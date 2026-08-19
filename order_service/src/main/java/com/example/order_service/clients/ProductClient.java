@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ProductClient {
     List<ProductDTO> getProductByIds(ProductFilter productFilter);
+   void  decreaseQuantityByIds(List<ProductDTO> productsDto);
 }

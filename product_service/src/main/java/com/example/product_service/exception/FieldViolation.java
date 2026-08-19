@@ -1,4 +1,4 @@
-package com.example.product_service.dto;
+package com.example.product_service.exception;
 
 public record FieldViolation(
         String field,

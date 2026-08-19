@@ -1,16 +1,19 @@
-package com.example.order_service.dtos.clientDTO;
+package com.example.product_service.dto.req;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class ProductDTO {
-    private String id;
+public class CreateProductReq {
+
+    @NotEmpty
     private String name;
+
     private Integer price;
+
     private Integer stock;
+
     private String categoryId;
 }

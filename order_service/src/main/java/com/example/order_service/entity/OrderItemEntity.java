@@ -15,15 +15,15 @@ import java.time.LocalDateTime;
 public class OrderItemEntity extends BaseEntity{
 
     @Id
+    @GeneratedValue(generator = "uuid")
     @Column(name = "id", length = 36)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private OrderEntity order;
+    @Column(name = "order_id")
+    private String orderId;
 
     @Column(name = "product_id", length = 36)
-    private ProductE productId;
+    private String productId;
 
     @Column(name = "price")
     private Integer price;

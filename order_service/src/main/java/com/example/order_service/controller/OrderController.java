@@ -29,11 +29,6 @@ public class OrderController {
             @Valid @RequestBody OrderRequest orderDTO) {
 
         return ResponseEntity.ok().body(
-                new BaseResponse<>(
-                        orderService.createOrder(orderDTO),
-                        "Create order successfully !",
-                        null
-                )
-        );
+                new BaseResponse<>(orderService.createOrder(orderDTO),  null));
     }
 }

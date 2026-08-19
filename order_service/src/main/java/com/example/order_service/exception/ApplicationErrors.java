@@ -1461,5 +1461,840 @@ public class ApplicationErrors {
                     400,
                     "Email not found for product"
             );
+// =====================================================
+// GENERAL REQUEST / VALIDATION
+// =====================================================
 
+    public static final ApplicationException INVALID_REQUEST =
+            new ApplicationException(
+                    400010,
+                    400,
+                    "Invalid request"
+            );
+
+    public static final ApplicationException REQUEST_BODY_REQUIRED =
+            new ApplicationException(
+                    400011,
+                    400,
+                    "Request body is required"
+            );
+
+    public static final ApplicationException INVALID_ID_FORMAT =
+            new ApplicationException(
+                    400012,
+                    400,
+                    "Invalid ID format"
+            );
+
+    public static final ApplicationException MISSING_REQUIRED_FIELD =
+            new ApplicationException(
+                    400013,
+                    400,
+                    "Required field is missing"
+            );
+
+    public static final ApplicationException INVALID_PAGE_NUMBER =
+            new ApplicationException(
+                    400014,
+                    400,
+                    "Page number is invalid"
+            );
+
+    public static final ApplicationException INVALID_PAGE_SIZE =
+            new ApplicationException(
+                    400015,
+                    400,
+                    "Page size is invalid"
+            );
+
+    public static final ApplicationException INVALID_SORT_FIELD =
+            new ApplicationException(
+                    400016,
+                    400,
+                    "Sort field is invalid"
+            );
+
+    public static final ApplicationException INVALID_DATE_RANGE =
+            new ApplicationException(
+                    400017,
+                    400,
+                    "Date range is invalid"
+            );
+
+    public static final ApplicationException PAYLOAD_TOO_LARGE =
+            new ApplicationException(
+                    413001,
+                    413,
+                    "Request payload is too large"
+            );
+
+    public static final ApplicationException UNSUPPORTED_MEDIA_TYPE =
+            new ApplicationException(
+                    415001,
+                    415,
+                    "Unsupported media type"
+            );
+
+    public static final ApplicationException RATE_LIMIT_EXCEEDED =
+            new ApplicationException(
+                    429001,
+                    429,
+                    "Too many requests"
+            );
+
+
+// =====================================================
+// MICROSERVICE COMMUNICATION
+// =====================================================
+
+    public static final ApplicationException PRODUCT_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503010,
+                    503,
+                    "Product service is currently unavailable"
+            );
+
+    public static final ApplicationException ORDER_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503011,
+                    503,
+                    "Order service is currently unavailable"
+            );
+
+    public static final ApplicationException INVENTORY_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503012,
+                    503,
+                    "Inventory service is currently unavailable"
+            );
+
+    public static final ApplicationException PAYMENT_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503013,
+                    503,
+                    "Payment service is currently unavailable"
+            );
+
+    public static final ApplicationException USER_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503014,
+                    503,
+                    "User service is currently unavailable"
+            );
+
+    public static final ApplicationException DELIVERY_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503015,
+                    503,
+                    "Delivery service is currently unavailable"
+            );
+
+    public static final ApplicationException DISCOUNT_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503016,
+                    503,
+                    "Discount service is currently unavailable"
+            );
+
+    public static final ApplicationException NOTIFICATION_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503017,
+                    503,
+                    "Notification service is currently unavailable"
+            );
+
+    public static final ApplicationException PRODUCT_SERVICE_TIMEOUT =
+            new ApplicationException(
+                    504010,
+                    504,
+                    "Product service request timed out"
+            );
+
+    public static final ApplicationException INVENTORY_SERVICE_TIMEOUT =
+            new ApplicationException(
+                    504011,
+                    504,
+                    "Inventory service request timed out"
+            );
+
+    public static final ApplicationException PAYMENT_SERVICE_TIMEOUT =
+            new ApplicationException(
+                    504012,
+                    504,
+                    "Payment service request timed out"
+            );
+
+    public static final ApplicationException USER_SERVICE_TIMEOUT =
+            new ApplicationException(
+                    504013,
+                    504,
+                    "User service request timed out"
+            );
+
+    public static final ApplicationException DELIVERY_SERVICE_TIMEOUT =
+            new ApplicationException(
+                    504014,
+                    504,
+                    "Delivery service request timed out"
+            );
+
+    public static final ApplicationException INVALID_SERVICE_RESPONSE =
+            new ApplicationException(
+                    502010,
+                    502,
+                    "Invalid response received from downstream service"
+            );
+
+    public static final ApplicationException DOWNSTREAM_SERVICE_ERROR =
+            new ApplicationException(
+                    502011,
+                    502,
+                    "Downstream service returned an error"
+            );
+
+    public static final ApplicationException SERVICE_CONNECTION_FAILED =
+            new ApplicationException(
+                    503018,
+                    503,
+                    "Could not connect to downstream service"
+            );
+
+    public static final ApplicationException CIRCUIT_BREAKER_OPEN =
+            new ApplicationException(
+                    503019,
+                    503,
+                    "Service temporarily unavailable due to circuit breaker"
+            );
+
+    public static final ApplicationException SERVICE_RETRY_EXHAUSTED =
+            new ApplicationException(
+                    503020,
+                    503,
+                    "Maximum service retry attempts exceeded"
+            );
+
+
+// =====================================================
+// API GATEWAY
+// =====================================================
+
+    public static final ApplicationException ROUTE_NOT_FOUND =
+            new ApplicationException(
+                    404020,
+                    404,
+                    "Gateway route not found"
+            );
+
+    public static final ApplicationException GATEWAY_TIMEOUT =
+            new ApplicationException(
+                    504020,
+                    504,
+                    "Gateway request timed out"
+            );
+
+    public static final ApplicationException GATEWAY_SERVICE_UNAVAILABLE =
+            new ApplicationException(
+                    503021,
+                    503,
+                    "Gateway service is currently unavailable"
+            );
+
+    public static final ApplicationException INVALID_GATEWAY_REQUEST =
+            new ApplicationException(
+                    400020,
+                    400,
+                    "Invalid gateway request"
+            );
+
+
+// =====================================================
+// IDEMPOTENCY / DUPLICATE REQUEST
+// =====================================================
+
+    public static final ApplicationException DUPLICATE_REQUEST =
+            new ApplicationException(
+                    409020,
+                    409,
+                    "Duplicate request detected"
+            );
+
+    public static final ApplicationException IDEMPOTENCY_KEY_REQUIRED =
+            new ApplicationException(
+                    400021,
+                    400,
+                    "Idempotency key is required"
+            );
+
+    public static final ApplicationException INVALID_IDEMPOTENCY_KEY =
+            new ApplicationException(
+                    400022,
+                    400,
+                    "Idempotency key is invalid"
+            );
+
+    public static final ApplicationException REQUEST_ALREADY_PROCESSED =
+            new ApplicationException(
+                    409021,
+                    409,
+                    "Request has already been processed"
+            );
+
+    public static final ApplicationException REQUEST_PROCESSING =
+            new ApplicationException(
+                    409022,
+                    409,
+                    "Request is currently being processed"
+            );
+
+
+// =====================================================
+// ORDER - MICROSERVICE EXTRA
+// =====================================================
+
+    public static final ApplicationException ORDER_PRODUCT_NOT_FOUND =
+            new ApplicationException(
+                    404615,
+                    404,
+                    "One or more products in the order were not found"
+            );
+
+    public static final ApplicationException ORDER_PRODUCT_INACTIVE =
+            new ApplicationException(
+                    409615,
+                    409,
+                    "One or more products in the order are inactive"
+            );
+
+    public static final ApplicationException ORDER_INVENTORY_RESERVATION_FAILED =
+            new ApplicationException(
+                    409616,
+                    409,
+                    "Unable to reserve inventory for order"
+            );
+
+    public static final ApplicationException ORDER_INVENTORY_RELEASE_FAILED =
+            new ApplicationException(
+                    409617,
+                    409,
+                    "Unable to release reserved inventory"
+            );
+
+    public static final ApplicationException ORDER_PAYMENT_FAILED =
+            new ApplicationException(
+                    409618,
+                    409,
+                    "Order payment failed"
+            );
+
+    public static final ApplicationException ORDER_CONFIRMATION_FAILED =
+            new ApplicationException(
+                    409619,
+                    409,
+                    "Order confirmation failed"
+            );
+
+    public static final ApplicationException ORDER_ROLLBACK_FAILED =
+            new ApplicationException(
+                    500610,
+                    500,
+                    "Order rollback failed"
+            );
+
+    public static final ApplicationException ORDER_TOTAL_CHANGED =
+            new ApplicationException(
+                    409620,
+                    409,
+                    "Order total changed during checkout"
+            );
+
+    public static final ApplicationException ORDER_PRODUCT_PRICE_MISMATCH =
+            new ApplicationException(
+                    409621,
+                    409,
+                    "Product price does not match current product price"
+            );
+
+    public static final ApplicationException ORDER_QUANTITY_NOT_AVAILABLE =
+            new ApplicationException(
+                    409622,
+                    409,
+                    "Requested product quantity is not available"
+            );
+
+    public static final ApplicationException ORDER_CREATION_IN_PROGRESS =
+            new ApplicationException(
+                    409623,
+                    409,
+                    "Order creation is already in progress"
+            );
+
+    public static final ApplicationException ORDER_DUPLICATE_PRODUCT =
+            new ApplicationException(
+                    400605,
+                    400,
+                    "Order contains duplicate product entries"
+            );
+
+
+// =====================================================
+// INVENTORY - MICROSERVICE EXTRA
+// =====================================================
+
+    public static final ApplicationException INVENTORY_RESERVATION_NOT_FOUND =
+            new ApplicationException(
+                    404211,
+                    404,
+                    "Inventory reservation not found"
+            );
+
+    public static final ApplicationException INVENTORY_RESERVATION_EXPIRED =
+            new ApplicationException(
+                    409212,
+                    409,
+                    "Inventory reservation has expired"
+            );
+
+    public static final ApplicationException INVENTORY_RESERVATION_ALREADY_RELEASED =
+            new ApplicationException(
+                    409213,
+                    409,
+                    "Inventory reservation has already been released"
+            );
+
+    public static final ApplicationException INVENTORY_RESERVATION_ALREADY_CONFIRMED =
+            new ApplicationException(
+                    409214,
+                    409,
+                    "Inventory reservation has already been confirmed"
+            );
+
+    public static final ApplicationException RESERVED_QUANTITY_EXCEEDS_STOCK =
+            new ApplicationException(
+                    409215,
+                    409,
+                    "Reserved quantity exceeds available stock"
+            );
+
+    public static final ApplicationException INVENTORY_CONCURRENT_UPDATE =
+            new ApplicationException(
+                    409216,
+                    409,
+                    "Inventory was modified by another request"
+            );
+
+    public static final ApplicationException INVENTORY_OPERATION_FAILED =
+            new ApplicationException(
+                    500210,
+                    500,
+                    "Inventory operation failed"
+            );
+
+
+// =====================================================
+// PRODUCT SERVICE EXTRA
+// =====================================================
+
+    public static final ApplicationException PRODUCT_LIST_EMPTY =
+            new ApplicationException(
+                    400120,
+                    400,
+                    "Product ID list must not be empty"
+            );
+
+    public static final ApplicationException SOME_PRODUCTS_NOT_FOUND =
+            new ApplicationException(
+                    404120,
+                    404,
+                    "One or more requested products were not found"
+            );
+
+    public static final ApplicationException PRODUCT_ID_REQUIRED =
+            new ApplicationException(
+                    400121,
+                    400,
+                    "Product ID is required"
+            );
+
+    public static final ApplicationException PRODUCT_IDS_INVALID =
+            new ApplicationException(
+                    400122,
+                    400,
+                    "One or more product IDs are invalid"
+            );
+
+    public static final ApplicationException PRODUCT_UPDATE_CONFLICT =
+            new ApplicationException(
+                    409120,
+                    409,
+                    "Product has been updated by another transaction"
+            );
+
+
+// =====================================================
+// PAYMENT SERVICE EXTRA
+// =====================================================
+
+    public static final ApplicationException PAYMENT_INITIATION_FAILED =
+            new ApplicationException(
+                    500720,
+                    500,
+                    "Unable to initialize payment"
+            );
+
+    public static final ApplicationException PAYMENT_VERIFICATION_FAILED =
+            new ApplicationException(
+                    400720,
+                    400,
+                    "Payment verification failed"
+            );
+
+    public static final ApplicationException PAYMENT_CALLBACK_INVALID =
+            new ApplicationException(
+                    400721,
+                    400,
+                    "Payment callback is invalid"
+            );
+
+    public static final ApplicationException PAYMENT_CALLBACK_DUPLICATED =
+            new ApplicationException(
+                    409720,
+                    409,
+                    "Payment callback has already been processed"
+            );
+
+    public static final ApplicationException PAYMENT_REFERENCE_NOT_FOUND =
+            new ApplicationException(
+                    404720,
+                    404,
+                    "Payment reference not found"
+            );
+
+    public static final ApplicationException PAYMENT_PENDING =
+            new ApplicationException(
+                    409721,
+                    409,
+                    "Payment is still pending"
+            );
+
+    public static final ApplicationException PAYMENT_EXPIRED =
+            new ApplicationException(
+                    409722,
+                    409,
+                    "Payment has expired"
+            );
+
+    public static final ApplicationException PAYMENT_PROVIDER_REJECTED =
+            new ApplicationException(
+                    409723,
+                    409,
+                    "Payment provider rejected the transaction"
+            );
+
+
+// =====================================================
+// KAFKA / MESSAGE BROKER / EVENT
+// =====================================================
+
+    public static final ApplicationException MESSAGE_BROKER_UNAVAILABLE =
+            new ApplicationException(
+                    503900,
+                    503,
+                    "Message broker is currently unavailable"
+            );
+
+    public static final ApplicationException EVENT_PUBLISH_FAILED =
+            new ApplicationException(
+                    500900,
+                    500,
+                    "Failed to publish event"
+            );
+
+    public static final ApplicationException EVENT_CONSUME_FAILED =
+            new ApplicationException(
+                    500901,
+                    500,
+                    "Failed to consume event"
+            );
+
+    public static final ApplicationException INVALID_EVENT_PAYLOAD =
+            new ApplicationException(
+                    400950,
+                    400,
+                    "Event payload is invalid"
+            );
+
+    public static final ApplicationException EVENT_ALREADY_PROCESSED =
+            new ApplicationException(
+                    409950,
+                    409,
+                    "Event has already been processed"
+            );
+
+    public static final ApplicationException EVENT_OUT_OF_ORDER =
+            new ApplicationException(
+                    409951,
+                    409,
+                    "Event was received out of order"
+            );
+
+    public static final ApplicationException EVENT_VERSION_NOT_SUPPORTED =
+            new ApplicationException(
+                    400951,
+                    400,
+                    "Event version is not supported"
+            );
+
+    public static final ApplicationException EVENT_DESERIALIZATION_FAILED =
+            new ApplicationException(
+                    400952,
+                    400,
+                    "Unable to deserialize event"
+            );
+
+    public static final ApplicationException EVENT_SERIALIZATION_FAILED =
+            new ApplicationException(
+                    500902,
+                    500,
+                    "Unable to serialize event"
+            );
+
+    public static final ApplicationException DEAD_LETTER_PUBLISH_FAILED =
+            new ApplicationException(
+                    500903,
+                    500,
+                    "Failed to publish message to dead letter topic"
+            );
+
+
+// =====================================================
+// SAGA / DISTRIBUTED TRANSACTION
+// =====================================================
+
+    public static final ApplicationException SAGA_NOT_FOUND =
+            new ApplicationException(
+                    404950,
+                    404,
+                    "Saga transaction not found"
+            );
+
+    public static final ApplicationException SAGA_ALREADY_COMPLETED =
+            new ApplicationException(
+                    409952,
+                    409,
+                    "Saga transaction has already completed"
+            );
+
+    public static final ApplicationException SAGA_COMPENSATION_FAILED =
+            new ApplicationException(
+                    500904,
+                    500,
+                    "Saga compensation failed"
+            );
+
+    public static final ApplicationException SAGA_STEP_FAILED =
+            new ApplicationException(
+                    500905,
+                    500,
+                    "Saga transaction step failed"
+            );
+
+    public static final ApplicationException DISTRIBUTED_TRANSACTION_FAILED =
+            new ApplicationException(
+                    500906,
+                    500,
+                    "Distributed transaction failed"
+            );
+
+
+// =====================================================
+// DATABASE / PERSISTENCE
+// =====================================================
+
+    public static final ApplicationException DATABASE_ERROR =
+            new ApplicationException(
+                    500010,
+                    500,
+                    "Database operation failed"
+            );
+
+    public static final ApplicationException DATABASE_UNAVAILABLE =
+            new ApplicationException(
+                    503030,
+                    503,
+                    "Database is currently unavailable"
+            );
+
+    public static final ApplicationException DATABASE_TIMEOUT =
+            new ApplicationException(
+                    504030,
+                    504,
+                    "Database operation timed out"
+            );
+
+    public static final ApplicationException DATABASE_CONSTRAINT_VIOLATION =
+            new ApplicationException(
+                    409030,
+                    409,
+                    "Database constraint violation"
+            );
+
+    public static final ApplicationException RESOURCE_UPDATE_CONFLICT =
+            new ApplicationException(
+                    409031,
+                    409,
+                    "Resource was modified by another transaction"
+            );
+
+    public static final ApplicationException RESOURCE_LOCKED =
+            new ApplicationException(
+                    423010,
+                    423,
+                    "Resource is currently locked"
+            );
+
+    public static final ApplicationException OPTIMISTIC_LOCK_FAILED =
+            new ApplicationException(
+                    409032,
+                    409,
+                    "Optimistic locking conflict"
+            );
+
+
+// =====================================================
+// CACHE
+// =====================================================
+
+    public static final ApplicationException CACHE_UNAVAILABLE =
+            new ApplicationException(
+                    503040,
+                    503,
+                    "Cache service is currently unavailable"
+            );
+
+    public static final ApplicationException CACHE_READ_FAILED =
+            new ApplicationException(
+                    500040,
+                    500,
+                    "Failed to read data from cache"
+            );
+
+    public static final ApplicationException CACHE_WRITE_FAILED =
+            new ApplicationException(
+                    500041,
+                    500,
+                    "Failed to write data to cache"
+            );
+
+
+// =====================================================
+// NOTIFICATION / EMAIL
+// =====================================================
+
+    public static final ApplicationException EMAIL_SEND_FAILED =
+            new ApplicationException(
+                    500050,
+                    500,
+                    "Failed to send email"
+            );
+
+    public static final ApplicationException NOTIFICATION_SEND_FAILED =
+            new ApplicationException(
+                    500051,
+                    500,
+                    "Failed to send notification"
+            );
+
+    public static final ApplicationException INVALID_EMAIL_ADDRESS =
+            new ApplicationException(
+                    400050,
+                    400,
+                    "Email address is invalid"
+            );
+
+    public static final ApplicationException NOTIFICATION_TEMPLATE_NOT_FOUND =
+            new ApplicationException(
+                    404050,
+                    404,
+                    "Notification template not found"
+            );
+
+
+// =====================================================
+// FILE / IMAGE SERVICE
+// =====================================================
+
+    public static final ApplicationException FILE_NOT_FOUND =
+            new ApplicationException(
+                    404060,
+                    404,
+                    "File not found"
+            );
+
+    public static final ApplicationException FILE_UPLOAD_FAILED =
+            new ApplicationException(
+                    500060,
+                    500,
+                    "File upload failed"
+            );
+
+    public static final ApplicationException FILE_DELETE_FAILED =
+            new ApplicationException(
+                    500061,
+                    500,
+                    "File deletion failed"
+            );
+
+    public static final ApplicationException INVALID_FILE_TYPE =
+            new ApplicationException(
+                    400060,
+                    400,
+                    "File type is not supported"
+            );
+
+    public static final ApplicationException FILE_SIZE_EXCEEDED =
+            new ApplicationException(
+                    413060,
+                    413,
+                    "File size exceeds maximum allowed size"
+            );
+
+
+// =====================================================
+// SYSTEM
+// =====================================================
+
+    public static final ApplicationException INTERNAL_SERVER_ERROR =
+            new ApplicationException(
+                    500000,
+                    500,
+                    "Internal server error"
+            );
+
+    public static final ApplicationException SERVICE_NOT_READY =
+            new ApplicationException(
+                    503050,
+                    503,
+                    "Service is not ready to process requests"
+            );
+
+    public static final ApplicationException SERVICE_MAINTENANCE =
+            new ApplicationException(
+                    503051,
+                    503,
+                    "Service is currently under maintenance"
+            );
+
+    public static final ApplicationException OPERATION_NOT_SUPPORTED =
+            new ApplicationException(
+                    400070,
+                    400,
+                    "Operation is not supported"
+            );
+
+    public static final ApplicationException FEATURE_NOT_AVAILABLE =
+            new ApplicationException(
+                    503052,
+                    503,
+                    "Feature is currently unavailable"
+            );
 }
