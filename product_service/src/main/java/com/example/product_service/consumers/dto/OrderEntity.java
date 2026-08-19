@@ -1,5 +1,6 @@
 package com.example.product_service.consumers.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +14,8 @@ import org.springframework.data.annotation.Id;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderEntity {
 
 

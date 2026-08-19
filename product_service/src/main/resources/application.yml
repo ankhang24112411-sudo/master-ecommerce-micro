@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: order_service
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5435/product_db}
+    username: postgres
+    password: password
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: product-service
+      auto-offset-reset: earliest
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+
+jpa:
+  show-sql: true
+server:
+  port: 8088

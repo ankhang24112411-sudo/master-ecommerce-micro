@@ -1,4 +1,16 @@
 package com.example.product_service.exception;
 
-public class ApplicationException {
+import lombok.Getter;
+
+@Getter
+public class ApplicationException extends RuntimeException {
+
+    private int code;
+    private int httpStatus;
+
+    public ApplicationException(int code, int httpStatus, String message) {
+        super(message);
+        this.code = code;
+        this.httpStatus = httpStatus;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.product_service.dto;
 
+import com.example.product_service.exception.FieldViolation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
