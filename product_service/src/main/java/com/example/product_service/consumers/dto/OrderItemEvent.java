@@ -6,15 +6,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderItemEntity {
-
-    private String id;
-
-    private String orderId;
-
+public class OrderItemEvent {
     private String productId;
-
-    private Integer price;
 
     private Integer quantity;
 }

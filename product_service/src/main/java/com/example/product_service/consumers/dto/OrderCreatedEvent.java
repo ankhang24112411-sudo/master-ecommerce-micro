@@ -9,7 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OrderCreatedEvent extends OrderEntity{
-    private List<OrderItemEntity> orderItems;
 
+public class OrderCreatedEvent {
+    private String orderId;
+    private List<OrderItemEvent> orderItems;
 }

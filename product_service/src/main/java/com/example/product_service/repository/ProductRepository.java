@@ -1,7 +1,11 @@
 package com.example.product_service.repository;
 
 import com.example.product_service.entity.Product;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,5 +14,9 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, String> {
    List<Product> findAllByIdn(List<String> ids);
    List<Product> findByIdInAndIsDeleted(List<String> ids, Boolean isDeleted);
+
+   @Lock(LockModeType.PESSIMISTIC_WRITE)
+   @Query("select p from Product p where p.id in :ids")
+   List<Product> findByIdInForUpdate(@Param("ids") List<String> ids);
 
 }
