@@ -27,22 +27,12 @@ public class OrderCreatedConsumer {
     @KafkaListener(topics = "order_created")
     @RetryableTopic(
             attempts = "4",
-            backOff = @BackOff(
-                    delay = 2_000,
-                    multiplier = 2.0
-            ),
-            exclude = {
-                    NullPointerException.class,
-                    IllegalArgumentException.class
-            }
+            backOff = @BackOff(delay = 2_000, multiplier = 2.0),
+            exclude = {NullPointerException.class, IllegalArgumentException.class}
     )
     public void handleOrderCreatedEvent(String orderString) throws JacksonException {
 
-        OrderCreatedEvent orderCreatedEvent =
-                objectMapper.readValue(
-                        orderString,
-                        OrderCreatedEvent.class
-                );
+        OrderCreatedEvent orderCreatedEvent = objectMapper.readValue(orderString, OrderCreatedEvent.class);
 
         List<LockProductItem> lockProductItems = new ArrayList<>();
         orderCreatedEvent.getOrderItems().forEach(orderItem -> {

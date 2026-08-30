@@ -1,5 +1,6 @@
 package com.example.product_service.dto.clients;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

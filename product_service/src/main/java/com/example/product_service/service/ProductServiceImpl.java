@@ -34,7 +34,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ProductRepository productRepo;
     private final CategoryRepository categoryRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+//    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RedissonClient redissonClient;
 
     @Override
@@ -54,10 +54,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDTO> search(ProductFilter productFilter) {
-        return productRepo.findAllByIdn(productFilter.getIds())
-                .stream()
-                .map(productMapper::toProductDTO)
-                .toList();
+        List<Product> entities = productRepo.findAllById(productFilter.getIds());
+
+        List<ProductDTO> result = new ArrayList<>();
+
+        for (Product product : entities) {
+            try {
+                result.add(productMapper.toProductDTO(product));
+            } catch (Exception e) {
+                log.error("Map Product sang ProductDTO lỗi, productId={}", product.getId(), e);
+                throw e;
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -156,7 +166,7 @@ public class ProductServiceImpl implements ProductService {
                 var productIdQuantityMap = items.stream()
                         .collect(Collectors.toMap(LockProductItem::getId, LockProductItem::getQuantity));
 
-                List<Product> products = productRepo.findAllByIdn(new ArrayList<>(productIdQuantityMap.keySet()));
+                List<Product> products = productRepo.findAllById(new ArrayList<>(productIdQuantityMap.keySet()));
 
                 if (products.isEmpty()) {
                     throw new RuntimeException("Product not found");

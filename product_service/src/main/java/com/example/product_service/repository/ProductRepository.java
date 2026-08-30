@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
-   List<Product> findAllByIdn(List<String> ids);
+//   List<Product> findAllById(List<String> ids);
    List<Product> findByIdInAndIsDeleted(List<String> ids, Boolean isDeleted);
 
    @Lock(LockModeType.PESSIMISTIC_WRITE)

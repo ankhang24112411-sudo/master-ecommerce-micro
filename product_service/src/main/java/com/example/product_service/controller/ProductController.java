@@ -29,7 +29,7 @@ public ResponseEntity<BaseResponse<List<ProductDTO>>> search(@RequestBody Produc
 
     return ResponseEntity.ok(new BaseResponse<>(products, "success"));
 }
-    @PostMapping("/Ids")
+    @PostMapping("/ids")
 
     public BaseResponse<List<ProductDTO>> decreaseQuantityByIds(@RequestBody @Valid List<ProductDTO> request) {
 

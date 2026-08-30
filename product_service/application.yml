@@ -5,7 +5,7 @@ eureka:
 
 spring:
   application:
-    name: product_service
+    name: product-service
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5435/product_db}
     username: postgres
@@ -17,6 +17,7 @@ spring:
       auto-offset-reset: earliest
       key-serializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
+#      JSON bytes → chuỗi JSON.
       properties:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: false
@@ -24,7 +25,11 @@ spring:
     redis:
       host: localhost
       port: 6379
-
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: TRACE
 jpa:
   show-sql: true
 server:
