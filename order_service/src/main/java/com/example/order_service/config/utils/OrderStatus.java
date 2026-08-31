@@ -2,7 +2,8 @@ package com.example.order_service.config.utils;
 
 public enum OrderStatus {
     PENDING,       // Chờ xác nhận
-    CONFIRMED,     // Đã xác nhận
+    STOCK_RESERVED,
+    PAYMENT_RECEIVED,
     PICKING,       // Đang lấy hàng tại kho
     SHIPPING,      // Đang giao hàng
     DELIVERED,     // Giao hàng thành công

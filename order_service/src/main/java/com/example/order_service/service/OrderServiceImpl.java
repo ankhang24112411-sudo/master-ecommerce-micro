@@ -2,6 +2,8 @@ package com.example.order_service.service;
 
 import com.example.order_service.clients.ProductClient;
 import com.example.order_service.config.utils.OrderStatus;
+import com.example.order_service.consumer.event.InventoryReservedEvent;
+import com.example.order_service.consumer.event.PaymentEvent;
 import com.example.order_service.dtos.clientDTO.ProductDTO;
 import com.example.order_service.dtos.clientDTO.ProductFilter;
 import com.example.order_service.dtos.events.OrderCreatedEvent;
@@ -103,4 +105,41 @@ public class OrderServiceImpl implements OrderService{
         log.info("Publish new order success to order_created");
         return createdOrder;
     }
+
+    @Override
+    public void updateOrderStatus(String orderId, OrderStatus status) {
+        orderRepository.findById(orderId).ifPresent(order -> {
+            order.setStatus(status.name());
+
+        });
+    }
+
+    @Override
+    public void handleInventoryReservedEvent(InventoryReservedEvent inventoryReservedEvent) {
+      orderRepository.findById(inventoryReservedEvent.getOrderId()).ifPresent(orderEntity -> {
+            if(!orderEntity.getStatus().equals(OrderStatus.PENDING.name())){
+                throw ApplicationErrors.INVALID_ORDER_STATUS;
+            }
+            if(inventoryReservedEvent.getStatus().equals("SUCCESS")){
+                orderEntity.setStatus(OrderStatus.STOCK_RESERVED.name());
+            }else {
+                orderEntity.setStatus(OrderStatus.FAILED.name());
+            }
+        });
+    }
+
+    @Override
+    public void handlePaymentEvent(PaymentEvent paymentEvent) {
+        orderRepository.findById(paymentEvent.getOrderId()).ifPresent(orderEntity -> {
+            if(!orderEntity.getStatus().equals(OrderStatus.STOCK_RESERVED.name())){
+                throw ApplicationErrors.INVALID_ORDER_STATUS;
+            }
+            if(paymentEvent.getStatus().equals("SUCCESS")){
+                orderEntity.setStatus(OrderStatus.PAYMENT_RECEIVED.name());
+            }else {
+                orderEntity.setStatus(OrderStatus.FAILED.name());
+            }
+        });
+    }
+
 }

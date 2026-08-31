@@ -4,7 +4,7 @@ import com.example.order_service.dtos.BaseResponse;
 import com.example.order_service.dtos.request.OrderRequest;
 import com.example.order_service.entity.OrderEntity;
 import com.example.order_service.service.OrderService;
-import jakarta.persistence.criteria.Order;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +25,14 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/place-order")
+    @RateLimiter(name = "backendA", fallbackMethod = "fallbackCreateOrder")
     ResponseEntity<BaseResponse<OrderEntity>> createOrder(
             @Valid @RequestBody OrderRequest orderDTO) {
 
         return ResponseEntity.ok().body(
                 new BaseResponse<>(orderService.createOrder(orderDTO),  null));
+    }
+    public String fallbackCreateOrder(Throwable throwable){
+        return "Too much request";
     }
 }

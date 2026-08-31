@@ -15,11 +15,40 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 #      Object → JSON bytes.
+    consumer:
+      group-id: order-service
+      auto-offset-reset: earliest
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       acks: all
       properties:
         delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
         request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
         linger.ms: 0               # Gửi ngay lập tức, không gom batch
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 20
+        failureRateThreshold: 50
+        waitDurationInOpenState: 50s
+        permittedNumberOfCallsInHalfOpenState: 3
+        eventConsumerBufferSize: 10
+  ratelimiter:
+    instances:
+
+      backendA:
+        limitForPeriod: 2
+        limitRefreshPeriod: 10s
+        timeoutDuration: 0
+
+      backendB:
+        limitForPeriod: 6
+        limitRefreshPeriod: 500ms
+        timeoutDuration: 3s
 jpa:
   show-sql: true
 server:
