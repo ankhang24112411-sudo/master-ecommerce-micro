@@ -1,0 +1,19 @@
+services:
+
+  postgres:
+    image: postgis/postgis:18-3.6
+    container_name: user-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: user_db
+
+    ports:
+      - "5438:5432"
+
+    volumes:
+      - product_postgres_data:/var/lib/postgresql
+volumes:
+  product_postgres_data:
