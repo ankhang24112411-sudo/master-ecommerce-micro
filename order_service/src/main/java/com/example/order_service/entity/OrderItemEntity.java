@@ -3,7 +3,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_items")
@@ -15,8 +14,8 @@ import java.time.LocalDateTime;
 public class OrderItemEntity extends BaseEntity{
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @Column(name = "id", length = 36)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String id;
 
     @Column(name = "order_id")

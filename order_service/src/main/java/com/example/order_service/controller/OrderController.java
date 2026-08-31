@@ -24,7 +24,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/place-order")
     ResponseEntity<BaseResponse<OrderEntity>> createOrder(
             @Valid @RequestBody OrderRequest orderDTO) {
 

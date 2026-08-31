@@ -19,7 +19,7 @@ public class ProductClientImpl implements ProductClient{
     public List<ProductDTO> getProductByIds(ProductFilter productFilter) {
         BaseResponse<List<ProductDTO>> response = webClientBuilder.build()
                 .post()
-                .uri("http://localhost:8088/v1/products/search")
+                .uri("http://product-service/v1/products/search")
                 .bodyValue(productFilter)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<BaseResponse<List<ProductDTO>>>() {})
@@ -36,7 +36,7 @@ public class ProductClientImpl implements ProductClient{
     public void decreaseQuantityByIds(List<ProductDTO> productsDto) {
         BaseResponse<List<ProductDTO>> response = webClientBuilder.build()
                 .put()
-                .uri("http://localhost:8088/v1/products/ids")
+                .uri("http://product-service/v1/products/ids")
                 .bodyValue(productsDto)
                 .retrieve()
                 .bodyToMono(

@@ -4,6 +4,8 @@ import com.example.order_service.clients.ProductClient;
 import com.example.order_service.config.utils.OrderStatus;
 import com.example.order_service.dtos.clientDTO.ProductDTO;
 import com.example.order_service.dtos.clientDTO.ProductFilter;
+import com.example.order_service.dtos.events.OrderCreatedEvent;
+import com.example.order_service.dtos.events.OrderItemEvent;
 import com.example.order_service.dtos.request.OrderItemRequest;
 import com.example.order_service.dtos.request.OrderRequest;
 import com.example.order_service.entity.OrderEntity;
@@ -46,7 +48,7 @@ public class OrderServiceImpl implements OrderService{
 
         OrderEntity order = new OrderEntity();
         order.setCustomerId(request.getCustomerId());
-        order.setStatus(OrderStatus.NEW.name());
+        order.setStatus(OrderStatus.PENDING.name());
         order.setTotalAmount(0);
 
         OrderEntity savedOrder = orderRepository.save(order);
@@ -79,17 +81,25 @@ public class OrderServiceImpl implements OrderService{
 
             totalAmount += price * itemDTO.getQuantity();
         }
-        List<ProductDTO> buyProducts = orderItems.stream()
-                        .map(orderItem -> ProductDTO
-                                .builder()
-                                .id(orderItem.getProductId())
-                                .price(orderItem.getPrice())
-                                .build()).toList();
+
         orderItemRepo.saveAll(orderItems);
         savedOrder.setTotalAmount(totalAmount);
-        productClient.decreaseQuantityByIds(buyProducts);
         OrderEntity createdOrder = orderRepository.save(savedOrder);
-        kafkaTemplate.send("order_created", createdOrder);
+
+        List<OrderItemEvent> eventItems = orderItems.stream()
+                .map(item -> OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .quantity(item.getQuantity())
+                        .price(item.getPrice()).build()).toList();
+
+        OrderCreatedEvent event = OrderCreatedEvent.builder()
+                .orderId(createdOrder.getId())
+                .customerId(createdOrder.getCustomerId())
+                .orderItems(eventItems)
+                .build();
+        kafkaTemplate.send("order_created", event);
+//        Order Service gửi object, JsonSerializer biến object thành JSON;
+//        Product Service nhận JSON dưới dạng String rồi tự map lại thành object.
         log.info("Publish new order success to order_created");
         return createdOrder;
     }
