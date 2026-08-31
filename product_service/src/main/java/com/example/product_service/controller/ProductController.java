@@ -4,15 +4,14 @@ package com.example.product_service.controller;
 import com.example.product_service.dto.BaseResponse;
 import com.example.product_service.dto.clients.ProductDTO;
 import com.example.product_service.dto.clients.ProductFilter;
+import com.example.product_service.entity.Product;
 import com.example.product_service.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,8 +20,11 @@ import java.util.List;
 @RequestMapping("/v1/products")
 public class ProductController {
  private final ProductService productService;
-
-@PostMapping("/search")
+    @GetMapping("/{id}")
+    public ResponseEntity<BaseResponse<Product>> getDetail(@PathVariable String id) {
+     return ResponseEntity.ok(new BaseResponse<>(productService.getById(id), "success"));
+    }
+@GetMapping("/search")
 public ResponseEntity<BaseResponse<List<ProductDTO>>> search(@RequestBody ProductFilter productFilter) {
 
     List<ProductDTO> products = productService.search(productFilter);

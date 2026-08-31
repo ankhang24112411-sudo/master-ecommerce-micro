@@ -4,6 +4,7 @@ import com.example.product_service.dto.req.CreateProductReq;
 import com.example.product_service.dto.clients.ProductDTO;
 import com.example.product_service.dto.clients.ProductFilter;
 import com.example.product_service.dto.req.LockProductReq;
+import com.example.product_service.dto.req.UpdateProductReq;
 import com.example.product_service.entity.Product;
 import jakarta.validation.Valid;
 
@@ -15,5 +16,7 @@ public interface ProductService {
 
  List<ProductDTO> decreaseQuantityByIds(@Valid List<ProductDTO> request);
 
+ Product getById(String id);
+ Product update(String id, UpdateProductReq updateProductReq);
  void lock(LockProductReq lockProductReq);
 }

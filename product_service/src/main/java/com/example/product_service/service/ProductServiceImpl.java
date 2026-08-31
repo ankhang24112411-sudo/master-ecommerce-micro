@@ -6,8 +6,10 @@ import com.example.product_service.dto.clients.ProductDTO;
 import com.example.product_service.dto.clients.ProductFilter;
 import com.example.product_service.dto.req.LockProductItem;
 import com.example.product_service.dto.req.LockProductReq;
+import com.example.product_service.dto.req.UpdateProductReq;
 import com.example.product_service.entity.Product;
 import com.example.product_service.exception.ApplicationErrors;
+import com.example.product_service.exception.ApplicationException;
 import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +56,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#productFilter.ids", condition = "#productFilter.ids != null" )
     public List<ProductDTO> search(ProductFilter productFilter) {
         List<Product> entities = productRepo.findAllById(productFilter.getIds());
 
@@ -60,16 +64,39 @@ public class ProductServiceImpl implements ProductService {
 
         for (Product product : entities) {
             try {
+                log.info("Product to be founded : {} , {}", product.getName(), product.getId());
                 result.add(productMapper.toProductDTO(product));
             } catch (Exception e) {
                 log.error("Map Product sang ProductDTO lỗi, productId={}", product.getId(), e);
                 throw e;
             }
         }
-
+        log.info("Cache for product {}", result.get(0));
         return result;
     }
+    @Override
+    @CacheEvict(value = "products", allEntries = true)
+    public Product update(String id, UpdateProductReq updateProductReq) {
+        var existedCategoryOptional =
+                categoryRepository.findById(updateProductReq.getCategoryId());
 
+        if (existedCategoryOptional.isEmpty()) {
+            throw ApplicationErrors.PRODUCT_NOT_FOUND;
+        }
+
+        var productOptional = productRepo.findById(id);
+
+        if (productOptional.isEmpty()) {
+            throw ApplicationErrors.PRODUCT_NOT_FOUND;
+        }
+
+        var existedProduct = productOptional.get();
+
+        var updatingProduct =
+                productMapper.fromUpdateRequest(updateProductReq, existedProduct);
+
+        return productRepo.save(updatingProduct);
+    }
     @Override
     public List<ProductDTO> decreaseQuantityByIds(List<ProductDTO> productsDTO) {
 //product valid from user
@@ -145,6 +172,12 @@ public class ProductServiceImpl implements ProductService {
                 })
                 .toList();
         }
+
+    @Override
+    public Product getById(String id) {
+        return productRepo.findById(id).orElse(null);
+    }
+
     @Override
     @Transactional
     @CacheEvict(value = {"product_search"}, allEntries = true)
