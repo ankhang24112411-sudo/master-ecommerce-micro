@@ -307,5 +307,28 @@ public class ProductCacheService {
             log.info("GET FROM LOCAL CACHE");
             return product;
         }
+        product = redisInfraService.getObject(genEventItemKey(id), Product.class);
+        if(product != null){
+            log.info("FROM DISTRIBUTED CACHE EXIST {}", product);
+          return product;
+        }
+        RedisDistributedLocker locker = redisDistributedService.getDistributedLock("PRODUCT_LOCK"+id);
+        try{
+            boolean isLock = locker.tryLock(1, 4 , TimeUnit.SECONDS);
+            if(!isLock){
+                return product;
+            }
+            product = redisInfraService.getObject(genEventItemKey(id), Product.class);
+
+            if(product != null){
+                productLocalCache.put(id, product);
+                return product;
+            }
+            // 3 -> van khong co thi truy van DB
+
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
    }
 }
