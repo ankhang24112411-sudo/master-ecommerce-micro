@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 public class LockProductReq {
+    private String orderId;
 
     @NotEmpty
     private List<LockProductItem> items;

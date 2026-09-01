@@ -43,6 +43,7 @@ public class OrderCreatedConsumer {
         });
         LockProductReq lockProductReq = new LockProductReq();
         lockProductReq.setItems(lockProductItems);
+        lockProductReq.setOrderId(orderCreatedEvent.getOrderId());
         productService.lock(lockProductReq);
     }
 }

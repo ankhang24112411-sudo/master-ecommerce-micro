@@ -1,5 +1,6 @@
 package com.example.product_service.service;
 
+import com.example.product_service.consumers.dto.InventoryReservedEvent;
 import com.example.product_service.dto.clients.ProductValid;
 import com.example.product_service.dto.req.CreateProductReq;
 import com.example.product_service.dto.clients.ProductDTO;
@@ -37,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ProductRepository productRepo;
     private final CategoryRepository categoryRepository;
-//    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RedissonClient redissonClient;
 
     @Override
@@ -202,14 +203,28 @@ public class ProductServiceImpl implements ProductService {
                 List<Product> products = productRepo.findAllById(new ArrayList<>(productIdQuantityMap.keySet()));
 
                 if (products.isEmpty()) {
-                    throw new RuntimeException("Product not found");
+                    InventoryReservedEvent event = new InventoryReservedEvent();
+                    event.setOrderId(lockProductReq.getOrderId());
+                    event.setStatus("FAILED");
+                    event.setMessage("Product not exist");
+                    kafkaTemplate.send("inventory-reserved", event);
+                    return;
                 }
                 products.forEach(product -> {
                     int remainStock = product.getStock() - productIdQuantityMap.get(product.getId());
                     if (remainStock < 0) {
-                        throw new RuntimeException("Product " + product.getId() + "is not enough stock");
+                        InventoryReservedEvent event = new InventoryReservedEvent();
+                        event.setOrderId(lockProductReq.getOrderId());
+                        event.setStatus("FAILED");
+                        event.setMessage("Product not enough stock");
+                        kafkaTemplate.send("inventory-reserved", event);
+                        return;
                     }
                     product.setStock(remainStock);
+                    InventoryReservedEvent event = new InventoryReservedEvent();
+                    event.setOrderId(lockProductReq.getOrderId());
+                    event.setStatus("SUCCESS");
+                    kafkaTemplate.send("inventory-reserved", event);
                     productRepo.saveAll(products);
                 });
             }
