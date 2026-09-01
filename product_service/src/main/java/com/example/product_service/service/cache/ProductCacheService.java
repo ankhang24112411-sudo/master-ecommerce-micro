@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j(topic = "PRODUCT-CACHE-SERVICE")
 @RequiredArgsConstructor
 public class ProductCacheService {
-    private RedisDistributedService redisDistributedService;
-    private RedisInfraService redisInfraService;
-    private ProductService productService;
+    private final RedisDistributedService redisDistributedService;
+    private final RedisInfraService redisInfraService;
+    private final ProductService productService;
     private String genEventItemKey(String itemId) {
         return "PRODUCT:" + itemId;
     }
@@ -325,8 +325,16 @@ public class ProductCacheService {
                 return product;
             }
             // 3 -> van khong co thi truy van DB
+        product = productService.getById(id);
 
-
+            if(product == null){
+                redisInfraService.setObject(genEventItemKey(id), product);
+                productLocalCache.put(id, null);
+                return product;
+            }
+            redisInfraService.setObject(genEventItemKey(id), product);
+            productLocalCache.put(id , product);
+              return product;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

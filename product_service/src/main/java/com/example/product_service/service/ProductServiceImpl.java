@@ -14,6 +14,7 @@ import com.example.product_service.exception.ApplicationException;
 import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
+import com.example.product_service.service.cache.ProductCacheServiceRefactor;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RedissonClient redissonClient;
+    private final ProductCacheServiceRefactor productCacheServiceRefactor;
 
     @Override
     public Product create(CreateProductReq createProductReq) {
@@ -245,5 +247,10 @@ public class ProductServiceImpl implements ProductService {
         }
 
     }
+
+    @Override
+    public Product getProductById(String productid, Long version) {
+        return productCacheServiceRefactor.getProductDetail(productid,version).getProduct();
     }
+}
 

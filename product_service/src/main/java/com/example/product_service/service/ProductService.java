@@ -19,4 +19,6 @@ public interface ProductService {
  Product getById(String id);
  Product update(String id, UpdateProductReq updateProductReq);
  void lock(LockProductReq lockProductReq);
+
+ Product getProductById(String productid , Long version);
 }

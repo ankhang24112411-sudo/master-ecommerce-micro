@@ -21,8 +21,8 @@ import java.util.List;
 public class ProductController {
  private final ProductService productService;
     @GetMapping("/{id}")
-    public ResponseEntity<BaseResponse<Product>> getDetail(@PathVariable String id) {
-     return ResponseEntity.ok(new BaseResponse<>(productService.getById(id), "success"));
+    public ResponseEntity<BaseResponse<Product>> getDetail(@PathVariable String id, @RequestParam (name= "version",required = false)Long version) {
+     return ResponseEntity.ok(new BaseResponse<>(productService.getProductById(id, version), "success"));
     }
 @GetMapping("/search")
 public ResponseEntity<BaseResponse<List<ProductDTO>>> search(@RequestBody ProductFilter productFilter) {
