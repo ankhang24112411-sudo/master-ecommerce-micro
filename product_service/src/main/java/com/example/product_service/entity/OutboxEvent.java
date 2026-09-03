@@ -6,9 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
+@Accessors(chain = true)
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -32,6 +35,5 @@ public class OutboxEvent {
 
     private int status;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime publishedAt;
+    private Instant createdAt;
 }

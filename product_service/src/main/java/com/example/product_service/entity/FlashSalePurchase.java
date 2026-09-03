@@ -15,12 +15,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FlashSalePurchase extends BaseEntity{
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
 
     @Column(name="campaign_id", nullable=false)
     private Long campaignId;

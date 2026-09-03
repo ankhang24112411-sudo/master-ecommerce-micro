@@ -1,17 +1,23 @@
 package com.example.product_service.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.example.product_service.dto.FlashSaleCampaignProjection;
-import com.example.product_service.entity.IdempotencyKey;
-import com.example.product_service.entity.OrderQueue;
+import com.example.product_service.entity.*;
 import com.example.product_service.entity.cache.FlashSaleCampaignCache;
+import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
+import com.example.product_service.repository.IdempotencyKeyRepository;
 import com.example.product_service.service.FlashSaleService;
+import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -20,8 +26,9 @@ import java.util.UUID;
 public class FlashSaleServiceImpl implements FlashSaleService {
     private final FlashSaleCampaignRepository flashSaleCampaignRepository;
     private final StockFlashSaleCache stockFlashSaleCache;
-    private final IdempotencyKeyRepository idempotencyKeyRepo;
-
+    private final IdempotencyKeyService idempotencyKeyService;
+    private final TransactionTemplate transactionTemplate;
+    private final
     @Override
     public FlashSaleCampaignCache findById(String flashSaleId) {
         FlashSaleCampaignProjection result = flashSaleCampaignRepository.findCacheById(flashSaleId);
@@ -58,9 +65,32 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             return failedQueue("422", "PRICE_NOT_FOUND");
         }
         try {
-            String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-            boolean isNewOrder = idempotencyKeyRepo
+            OrderQueue queue = transactionTemplate.execute(txStatus -> {
+                String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+                boolean isNewOrder = idempotencyKeyService.tryInsert(token, LocalDateTime.now().plusHours(24));
+                if (!isNewOrder) {
+                    throw ApplicationErrors.INVALID_IDEMPOTENCY_KEY;
+                }
+
+                OrderQueue q = new OrderQueue()
+                        .setToken(token)
+                        .setProductId(productId)
+                        .setQuantity(quantity)
+                        .setUserId(userId)
+                        .setCreatedAt(Instant.now());
+
+                OutboxEvent outboxEvent = new OutboxEvent()
+                        .setAggregateId(token)
+                        .setEventType("ORDER_PLACED")
+                        .setPayload(JSON.toJSONString(q))
+                        .setStatus(0)
+                        .setCreatedAt(Instant.now());
+
+
+
+            });
         }
+
     }
     private OrderQueue failedQueue(String code , String message){
         return new OrderQueue().setStatus(2).setMessage(code +": " + message);

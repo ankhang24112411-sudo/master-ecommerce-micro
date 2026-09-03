@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
     @Data
@@ -19,16 +20,15 @@ import java.time.LocalDateTime;
         @Column(unique = true, nullable = false, length = 64)
         private String token;
 
-        private int productId;
+        private String productId;
         private int quantity;
-        private int userId;
+        private String userId;
 
         // 0=PENDING, 1=SUCCESS, 2=FAILED
-        private int status;
+//        private int status;
 
         private String orderNumber;
         private String message;
 
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+        private Instant createdAt;
 }

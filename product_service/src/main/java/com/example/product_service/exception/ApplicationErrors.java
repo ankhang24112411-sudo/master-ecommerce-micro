@@ -3,7 +3,19 @@ package com.example.product_service.exception;
 
 
 public class ApplicationErrors {
+    public static final ApplicationException INVALID_IDEMPOTENCY_KEY =
+            new ApplicationException(
+                    400002,
+                    400,
+                    "Invalid idempotency key"
+            );
 
+    public static final ApplicationException IDEMPOTENCY_CHECK_FAILED =
+            new ApplicationException(
+                    500002,
+                    500,
+                    "Failed to verify idempotency key"
+            );
     public static final ApplicationException CART_CHANGED_DURING_CHECKOUT = new ApplicationException(
             401111,
             401,
