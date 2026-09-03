@@ -1,7 +1,6 @@
-package com.example.product_service.dto;
+package com.example.product_service.dto.req;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;

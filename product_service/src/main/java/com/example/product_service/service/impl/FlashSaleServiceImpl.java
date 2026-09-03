@@ -1,6 +1,62 @@
 package com.example.product_service.service.impl;
 
+import com.example.product_service.dto.FlashSaleCampaignProjection;
+import com.example.product_service.dto.req.OrderQueue;
+import com.example.product_service.entity.FlashSaleCampaign;
+import com.example.product_service.entity.FlashSaleCampaignCache;
+import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.service.FlashSaleService;
+import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j(topic = "FLASHSALE-SERVICE")
 public class FlashSaleServiceImpl implements FlashSaleService {
+    private final FlashSaleCampaignRepository flashSaleCampaignRepository;
+    private final StockFlashSaleCache stockFlashSaleCache;
+
+    @Override
+    public FlashSaleCampaignCache findById(String flashSaleId) {
+        FlashSaleCampaignProjection result = flashSaleCampaignRepository.findCacheById(flashSaleId);
+        FlashSaleCampaignCache flashSaleCampaignCache = new FlashSaleCampaignCache().withClone(result.getFlashSaleCampaign(), result.getProductName(),result.getCategoryName());
+        flashSaleCampaignCache.setProductName(result.getProductName());
+        flashSaleCampaignCache.setCategoryName(result.getCategoryName());
+        return flashSaleCampaignCache;
+    }
+    @Override
+    public OrderQueue placeOrderMQ(String userId, String productId, int quantity) {
+        //TODO bloom filter
+        int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(productId, quantity);
+        // -1 : Cannot find from REDIS
+        if(redisResult == -1){
+            log.info("placeOrderMQ : cache miss for productId={}, warming up..." ,productId);
+            boolean warmedUp = stockFlashSaleCache.addFSStockAvailableToCache(productId);
+
+            if(!warmedUp){
+                return failedQueue("404", "PRODUCT_NOT_FOUND");
+            }
+
+            //decrease after data warm up
+
+            redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(productId,quantity);
+        }
+        if(redisResult == 0){
+            log.info("placeOrderMQ: Redis OOS for productId={}", productId);
+            return failedQueue("409", "OUT_OF_STOCK");
+
+        }
+        BigDecimal unitPrice = stockFlashSaleCache.getEffectivePrice(productId);
+        if(unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            stockFlashSaleCache.increaseStockCache(productId,quantity );
+            return failedQueue("422", "PRICE_NOT_FOUND");
+        }
+    }
+    private OrderQueue failedQueue(String code , String message){
+        return new OrderQueue().setStatus(2).setMessage(code +": " + message);
+    }
 }

@@ -1,16 +1,24 @@
 package com.example.product_service.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FlashSaleCampaignCache {
     private Long version ;
     private FlashSaleCampaign flashSaleCampaign;
     private String productName;
     private String categoryName;
 
-    public FlashSaleCampaignCache withClone(FlashSaleCampaign flashSaleCampaign){
+    public FlashSaleCampaignCache withClone(FlashSaleCampaign flashSaleCampaign,String productName,String categoryName){
         this.flashSaleCampaign = flashSaleCampaign;
+        this.productName = productName;
+        this.categoryName = categoryName;
         return this;
     }
     public FlashSaleCampaignCache withVersion(Long version){

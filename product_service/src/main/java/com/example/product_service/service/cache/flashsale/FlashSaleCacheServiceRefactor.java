@@ -1,5 +1,6 @@
 package com.example.product_service.service.cache.flashsale;
 
+import com.example.product_service.entity.FlashSaleCampaign;
 import com.example.product_service.entity.FlashSaleCampaignCache;
 import com.example.product_service.entity.Product;
 import com.example.product_service.entity.ProductCache;
@@ -24,13 +25,13 @@ public class FlashSaleCacheServiceRefactor {
     private final RedisInfraService redisInfraService;
     private final FlashSaleService flashSaleService;
 
-    private final static Cache<String, FlashSaleCampaignCache> productLocalCache = CacheBuilder.newBuilder()
+    private final static Cache<String, FlashSaleCampaignCache> flashSaleLocalCache = CacheBuilder.newBuilder()
             .initialCapacity(10)
             .concurrencyLevel(12)
             .expireAfterWrite(100, TimeUnit.MINUTES)
             .build();
 
-    public FlashSaleCampaignCache getProductDetail(String flashSaleId, Long version){
+    public FlashSaleCampaignCache getFlashSaleDetail(String flashSaleId, Long version){
         if(flashSaleId == null){
             return null;
         }
@@ -38,59 +39,61 @@ public class FlashSaleCacheServiceRefactor {
 
         if(flashSaleCampaignCache != null){
             if(version == null){
-                log.info("01: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, productCache.getVersion());
+                log.info("01: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, flashSaleCampaignCache.getVersion());
                 return flashSaleCampaignCache;
             }
             if(version.equals(flashSaleCampaignCache.getVersion())){
 //                Hai version giống nhau → local đúng phiên bản → trả local.
-                log.info("02: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, productCache.getVersion());
+                log.info("02: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, flashSaleCampaignCache.getVersion());
                 return flashSaleCampaignCache;
             }
             if(version < flashSaleCampaignCache.getVersion()){
 //                Version phía gọi nhỏ hơn → local mới hơn → trả local.
-                log.info("02: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, productCache.getVersion());
+                log.info("02: GET FROM LOCAL CACHE: versionUser:{}, versionLOcal: {}", version, flashSaleCampaignCache.getVersion());
                 return flashSaleCampaignCache;
             }
             if(version > flashSaleCampaignCache.getVersion()){
 // NOTE: version nạp vào lớn hơn => tìm trong REDIS
-                return getFlashSaleDistributedCache(productId);
+                return getFlashSaleDistributedCache(flashSaleId);
             }
         }
-        return getProductDistributedCache(productId);
+        return getFlashSaleDistributedCache(flashSaleId);
 
     }
     //check trong REDIS
-    private ProductCache getFlashSaleDistributedCache(String productId) {
-        ProductCache productCache = redisInfraService.getObject(genEventItemKey(productId), ProductCache.class);
-        if(productCache == null){
+    private FlashSaleCampaignCache getFlashSaleDistributedCache(String flashSaleId) {
+        FlashSaleCampaignCache flashSaleCampaignCache = redisInfraService.getObject(genEventItemKey(flashSaleId), FlashSaleCampaignCache.class);
+        if(flashSaleCampaignCache == null){
             log.info("GET PRODUCT FROM DISTRIBUTED LOCK");
-            productCache = getProductDatabase(productId);
+            flashSaleCampaignCache = getFlashSaleDatabase(flashSaleId);
         }
-        productLocalCache.put(productId,productCache);
-        log.info("GET PRODUCT FROM DISTRIBUTED CACHE | {} ", productCache.getProduct().getStock());
-        return productCache;
+        flashSaleLocalCache.put(flashSaleId,flashSaleCampaignCache);
+        log.info("GET PRODUCT FROM DISTRIBUTED CACHE | {} ", flashSaleCampaignCache.getFlashSaleCampaign().getStock());
+        return flashSaleCampaignCache;
     }
     //    Cache Breakdown / Cache Stampede
-    private ProductCache getProductDatabase(String productId) {
-        RedisDistributedLocker locker = redisDistributedService.getDistributedLock(genEventItemKeyLock(productId));
+    private FlashSaleCampaignCache getFlashSaleDatabase(String flashSaleId) {
+        RedisDistributedLocker locker = redisDistributedService.getDistributedLock(genEventItemKeyLock(flashSaleId));
 
         try{
             boolean isLock = locker.tryLock(1 , 5 , TimeUnit.SECONDS);
             if(!isLock){
                 return null;
             }
-            ProductCache productCache = redisInfraService.getObject(genEventItemKey(productId), ProductCache.class);
-            if(productCache != null){
-                return productCache;
+            FlashSaleCampaignCache flashSaleCampaignCache = redisInfraService.getObject(genEventItemKey(flashSaleId), FlashSaleCampaignCache.class);
+            if(flashSaleCampaignCache != null){
+                return flashSaleCampaignCache;
             }
-            Product product = productService.getById(productId);
+            FlashSaleCampaignCache flashSaleCampaignCacheFromDBS = flashSaleService.findById(flashSaleId);
 
-            if(product == null){
+            if(flashSaleCampaignCacheFromDBS == null){
                 return null;
             }
-            productCache = new ProductCache().withClone(product).withVersion(System.currentTimeMillis());
-            redisInfraService.setObject(genEventItemKey(productId),productCache);
-            return productCache;
+            flashSaleCampaignCache = new FlashSaleCampaignCache()
+                    .withClone(flashSaleCampaignCacheFromDBS.getFlashSaleCampaign(), flashSaleCampaignCacheFromDBS.getProductName(), flashSaleCampaignCacheFromDBS.getCategoryName())
+                    .withVersion(System.currentTimeMillis());
+            redisInfraService.setObject(genEventItemKey(flashSaleId),flashSaleCampaignCache);
+            return flashSaleCampaignCache;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }finally {
@@ -98,18 +101,18 @@ public class FlashSaleCacheServiceRefactor {
         }
     }
 
-    private String genEventItemKey(String productId) {
-        return "PRODUCT:" + productId;
+    private String genEventItemKey(String flashSaleId) {
+        return "FLASH_SALE:" + flashSaleId;
     }
 
-    private String genEventItemKeyLock(String productId) {
-        return "PRODUCT_LOCK" + productId;
+    private String genEventItemKeyLock(String flashSaleId) {
+        return "FLASH_SALE_LOCK" + flashSaleId;
     }
-    private ProductCache getProductLocalCache(String productId) {
-        return productLocalCache.getIfPresent(productId);
+    private FlashSaleCampaignCache getFlashSaleLocalCache(String flashSaleId) {
+        return flashSaleLocalCache.getIfPresent(flashSaleId);
     }
-    public void invalidateProductCache(String productId){
-        productLocalCache.invalidate(productId);
-        redisInfraService.delete(genEventItemKey(productId));
-    }
+//    public void invalidateProductCache(String productId){
+//        productLocalCache.invalidate(productId);
+//        redisInfraService.delete(genEventItemKey(productId));
+//    }
 }

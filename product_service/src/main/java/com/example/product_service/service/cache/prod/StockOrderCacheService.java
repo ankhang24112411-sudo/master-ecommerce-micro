@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@Slf4j(topic = "STOCK_CACHE_SERVICE")
+@Slf4j(topic = "PRODUCT_STOCK_CACHE_SERVICE")
 @RequiredArgsConstructor
 public class StockOrderCacheService {
     // Lua script: Trừ stock trong Redis một cách ATOMIC
