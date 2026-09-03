@@ -12,10 +12,21 @@ services:
 
     ports:
       - "5435:5432"
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
 
     volumes:
       - product_postgres_data:/var/lib/postgresql
-
+    networks:
+      ecommerce-shared:
+        aliases:
+          - product-db
 #  redis:
 #    image: redis:7.0-alpine
 #    container_name: mpm-handover-redis
@@ -73,6 +84,12 @@ services:
 
 volumes:
   product_postgres_data:
+
+
+networks:
+  default:
+  ecommerce-shared:
+    external: true
 #  zookeeper-data:
 #  kafka-data:
 #  redis-data:

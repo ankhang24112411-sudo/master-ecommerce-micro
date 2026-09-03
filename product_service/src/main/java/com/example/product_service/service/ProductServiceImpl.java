@@ -180,7 +180,38 @@ public class ProductServiceImpl implements ProductService {
     public Product getById(String id) {
         return productRepo.findById(id).orElse(null);
     }
-
+//    Request A
+//
+//    lấy Redis lock
+//       |
+//    v
+//    đọc stock=100
+//            |
+//            v
+//    update stock=95
+//            |
+//            v
+//    unlock
+//
+//
+//    Request B
+//
+//    chờ lock
+//
+//       |
+//    v
+//
+//    đọc stock=95
+//
+//            |
+//            v
+//
+//    update stock=85
+//
+//            |
+//            v
+//
+//    unlock
     @Override
     @Transactional
     @CacheEvict(value = {"product_search"}, allEntries = true)
@@ -209,7 +240,7 @@ public class ProductServiceImpl implements ProductService {
                     event.setOrderId(lockProductReq.getOrderId());
                     event.setStatus("FAILED");
                     event.setMessage("Product not exist");
-                    kafkaTemplate.send("inventory-reserved", event);
+                    kafkaTemplate.send("inventory-reserved-failed", event);
                     return;
                 }
                 products.forEach(product -> {
@@ -219,7 +250,7 @@ public class ProductServiceImpl implements ProductService {
                         event.setOrderId(lockProductReq.getOrderId());
                         event.setStatus("FAILED");
                         event.setMessage("Product not enough stock");
-                        kafkaTemplate.send("inventory-reserved", event);
+                        kafkaTemplate.send("inventory-reserved-failed", event);
                         return;
                     }
                     product.setStock(remainStock);
