@@ -1,4 +1,4 @@
-package com.example.product_service.service.cache;
+package com.example.product_service.service.cache.prod;
 
 import com.example.product_service.entity.Product;
 import com.example.product_service.entity.ProductCache;
@@ -50,14 +50,14 @@ public class ProductCacheServiceRefactor {
                 return productCache;
             }
             if(version > productCache.getVersion()){
-//                Version phía gọi lớn hơn → local đang cũ → bỏ local, xuống Redis:
-                return getProductDistributedCache(productId);
+// NOTE: version nạp vào lớn hơn => tìm trong REDIS
+ return getProductDistributedCache(productId);
             }
         }
         return getProductDistributedCache(productId);
 
     }
-
+    //check trong REDIS
     private ProductCache getProductDistributedCache(String productId) {
         ProductCache productCache = redisInfraService.getObject(genEventItemKey(productId), ProductCache.class);
         if(productCache == null){
@@ -68,7 +68,7 @@ public class ProductCacheServiceRefactor {
         log.info("GET PRODUCT FROM DISTRIBUTED CACHE | {} ", productCache.getProduct().getStock());
         return productCache;
     }
-
+//    Cache Breakdown / Cache Stampede
     private ProductCache getProductDatabase(String productId) {
         RedisDistributedLocker locker = redisDistributedService.getDistributedLock(genEventItemKeyLock(productId));
 

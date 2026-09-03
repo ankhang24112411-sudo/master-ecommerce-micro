@@ -1,4 +1,4 @@
-package com.example.product_service.service.cache;
+package com.example.product_service.service.cache.prod;
 
 import com.example.product_service.entity.Product;
 import com.example.product_service.infra.cache.RedisInfraService;

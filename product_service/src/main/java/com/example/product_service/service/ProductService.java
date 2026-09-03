@@ -1,5 +1,6 @@
 package com.example.product_service.service;
 
+import com.example.product_service.dto.OrderQueue;
 import com.example.product_service.dto.req.CreateProductReq;
 import com.example.product_service.dto.clients.ProductDTO;
 import com.example.product_service.dto.clients.ProductFilter;
@@ -21,4 +22,9 @@ public interface ProductService {
  void lock(LockProductReq lockProductReq);
 
  Product getProductById(String productid , Long version);
+
+
+ OrderQueue placeOrderMQ(String userId, String productId, int quantity);
+
+// OrderQueue placeOrderMQ(String userId, String productId, int quantity);
 }

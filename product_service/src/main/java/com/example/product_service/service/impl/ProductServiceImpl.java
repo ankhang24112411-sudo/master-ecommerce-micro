@@ -1,6 +1,7 @@
-package com.example.product_service.service;
+package com.example.product_service.service.impl;
 
 import com.example.product_service.consumers.dto.InventoryReservedEvent;
+import com.example.product_service.dto.OrderQueue;
 import com.example.product_service.dto.clients.ProductValid;
 import com.example.product_service.dto.req.CreateProductReq;
 import com.example.product_service.dto.clients.ProductDTO;
@@ -10,11 +11,12 @@ import com.example.product_service.dto.req.LockProductReq;
 import com.example.product_service.dto.req.UpdateProductReq;
 import com.example.product_service.entity.Product;
 import com.example.product_service.exception.ApplicationErrors;
-import com.example.product_service.exception.ApplicationException;
 import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
-import com.example.product_service.service.cache.ProductCacheServiceRefactor;
+import com.example.product_service.service.ProductService;
+import com.example.product_service.service.cache.prod.ProductCacheServiceRefactor;
+import com.example.product_service.service.cache.prod.StockOrderCacheService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final RedissonClient redissonClient;
     private final ProductCacheServiceRefactor productCacheServiceRefactor;
-
+    private final StockOrderCacheService stockOrderCacheService;
     @Override
     public Product create(CreateProductReq createProductReq) {
 
@@ -282,6 +284,34 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product getProductById(String productid, Long version) {
         return productCacheServiceRefactor.getProductDetail(productid,version).getProduct();
+    }
+
+    @Override
+    public OrderQueue placeOrderMQ(String userId, String productId, int quantity) {
+        //TODO bloom filter
+        int redisResult = stockOrderCacheService.decreaseStockCacheByLUA(productId, quantity);
+        if(redisResult == -1){
+            log.info("placeOrderMQ : cache miss for productId={}, warming up..." ,productId);
+            boolean warmedUp = stockOrderCacheService.addStockAvailableToCache(productId);
+
+            if(!warmedUp){
+                return failedQueue("PRODUCT_NOT_FOUND", "Cannot find product");
+            }
+
+         //decrease after data warm up
+
+            redisResult = stockOrderCacheService.decreaseStockCacheByLUA(productId,quantity);
+        }
+        if(redisResult == 0){
+            log.info("placeOrderMQ: Redis OOS for productId={}", productId);
+            return failedQueue("OUT_OF_STOCK", "Product out of stock");
+
+        }
+//        long unitPrice = stockOrderCacheService.getEffectivePrice(productId);
+        return null;
+    }
+    private OrderQueue failedQueue(String code , String message){
+        return new OrderQueue().setStatus(2).setMessage(code +": " + message);
     }
 }
 

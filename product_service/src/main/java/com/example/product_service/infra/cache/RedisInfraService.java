@@ -1,6 +1,5 @@
 package com.example.product_service.infra.cache;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.redis.core.RedisTemplate;
 
 public interface RedisInfraService {
