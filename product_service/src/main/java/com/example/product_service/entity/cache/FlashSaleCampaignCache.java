@@ -1,5 +1,6 @@
-package com.example.product_service.entity;
+package com.example.product_service.entity.cache;
 
+import com.example.product_service.entity.FlashSaleCampaign;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

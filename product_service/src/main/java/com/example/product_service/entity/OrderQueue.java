@@ -1,4 +1,4 @@
-package com.example.product_service.dto.req;
+package com.example.product_service.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

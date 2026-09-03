@@ -1,5 +1,6 @@
-package com.example.product_service.entity;
+package com.example.product_service.entity.cache;
 
+import com.example.product_service.entity.Product;
 import lombok.Data;
 
 @Data

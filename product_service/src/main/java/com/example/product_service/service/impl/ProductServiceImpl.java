@@ -1,7 +1,7 @@
 package com.example.product_service.service.impl;
 
 import com.example.product_service.consumers.dto.InventoryReservedEvent;
-import com.example.product_service.dto.req.OrderQueue;
+import com.example.product_service.entity.OrderQueue;
 import com.example.product_service.dto.clients.ProductValid;
 import com.example.product_service.dto.req.CreateProductReq;
 import com.example.product_service.dto.clients.ProductDTO;

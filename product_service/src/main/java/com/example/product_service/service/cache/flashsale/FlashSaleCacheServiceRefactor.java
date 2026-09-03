@@ -1,14 +1,10 @@
 package com.example.product_service.service.cache.flashsale;
 
-import com.example.product_service.entity.FlashSaleCampaign;
-import com.example.product_service.entity.FlashSaleCampaignCache;
-import com.example.product_service.entity.Product;
-import com.example.product_service.entity.ProductCache;
+import com.example.product_service.entity.cache.FlashSaleCampaignCache;
 import com.example.product_service.infra.cache.RedisInfraService;
 import com.example.product_service.infra.redission.RedisDistributedLocker;
 import com.example.product_service.infra.redission.RedisDistributedService;
 import com.example.product_service.service.FlashSaleService;
-import com.example.product_service.service.ProductService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.RequiredArgsConstructor;

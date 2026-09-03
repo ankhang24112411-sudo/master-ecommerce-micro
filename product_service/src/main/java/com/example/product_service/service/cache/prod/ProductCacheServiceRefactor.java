@@ -1,7 +1,7 @@
 package com.example.product_service.service.cache.prod;
 
 import com.example.product_service.entity.Product;
-import com.example.product_service.entity.ProductCache;
+import com.example.product_service.entity.cache.ProductCache;
 import com.example.product_service.infra.cache.RedisInfraService;
 import com.example.product_service.infra.redission.RedisDistributedLocker;
 import com.example.product_service.infra.redission.RedisDistributedService;

@@ -1,7 +1,7 @@
 package com.example.product_service.service;
 
-import com.example.product_service.dto.req.OrderQueue;
-import com.example.product_service.entity.FlashSaleCampaignCache;
+import com.example.product_service.entity.OrderQueue;
+import com.example.product_service.entity.cache.FlashSaleCampaignCache;
 
 public interface FlashSaleService {
      FlashSaleCampaignCache findById(String flashSaleId);

@@ -1,9 +1,9 @@
 package com.example.product_service.service.impl;
 
 import com.example.product_service.dto.FlashSaleCampaignProjection;
-import com.example.product_service.dto.req.OrderQueue;
-import com.example.product_service.entity.FlashSaleCampaign;
-import com.example.product_service.entity.FlashSaleCampaignCache;
+import com.example.product_service.entity.IdempotencyKey;
+import com.example.product_service.entity.OrderQueue;
+import com.example.product_service.entity.cache.FlashSaleCampaignCache;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.service.FlashSaleService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 public class FlashSaleServiceImpl implements FlashSaleService {
     private final FlashSaleCampaignRepository flashSaleCampaignRepository;
     private final StockFlashSaleCache stockFlashSaleCache;
+    private final IdempotencyKeyRepository idempotencyKeyRepo;
 
     @Override
     public FlashSaleCampaignCache findById(String flashSaleId) {
@@ -54,6 +56,10 @@ public class FlashSaleServiceImpl implements FlashSaleService {
         if(unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
             stockFlashSaleCache.increaseStockCache(productId,quantity );
             return failedQueue("422", "PRICE_NOT_FOUND");
+        }
+        try {
+            String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            boolean isNewOrder = idempotencyKeyRepo
         }
     }
     private OrderQueue failedQueue(String code , String message){

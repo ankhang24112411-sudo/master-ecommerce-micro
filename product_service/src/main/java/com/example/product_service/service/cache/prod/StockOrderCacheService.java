@@ -1,6 +1,6 @@
 package com.example.product_service.service.cache.prod;
 
-import com.example.product_service.entity.ProductCache;
+import com.example.product_service.entity.cache.ProductCache;
 import com.example.product_service.infra.cache.RedisInfraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
