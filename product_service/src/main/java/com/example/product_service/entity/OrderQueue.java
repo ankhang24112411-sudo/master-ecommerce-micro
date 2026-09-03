@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
         private String userId;
 
         // 0=PENDING, 1=SUCCESS, 2=FAILED
-//        private int status;
+        private int status;
 
         private String orderNumber;
         private String message;
