@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 public class PlaceOrderMQMessage {
 
     private String token;
-    private String productId;
+    private String flashSaleId;
     private String userId;
 
     private int quantity;

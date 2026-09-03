@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class FlashSaleCampaignCache {
     private Long version ;
     private FlashSaleCampaign flashSaleCampaign;
+    private String productId;
     private String productName;
     private String categoryName;
 

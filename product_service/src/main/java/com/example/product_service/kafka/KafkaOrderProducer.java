@@ -23,4 +23,5 @@ public class KafkaOrderProducer {
     public CompletableFuture<SendResult<String, PlaceOrderMQMessage>> sendAsync(PlaceOrderMQMessage message) {
         return kafkaTemplate.send(KafkaTopicConfig.ORDER_PLACE_TOPIC, message.getToken(), message);
     }
+    public void sendOrderCancelLowStock()
 }

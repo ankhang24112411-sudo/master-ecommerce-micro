@@ -82,18 +82,12 @@ public class StockFlashSaleCache {
         redisInfraService.setInt(keyFSStockCache, flashSaleCampaignCache.getFlashSaleCampaign().getStock());
         return  true;
     }
-    public BigDecimal getEffectivePrice(String flashSaleId){
-        FlashSaleCampaignCache flashSaleCampaignCache = flashSaleCacheServiceRefactor.getFlashSaleDetail(flashSaleId, null);
-        if(flashSaleId == null || flashSaleCampaignCache.getFlashSaleCampaign() == null){
-            return BigDecimal.valueOf(-1);
-        }
-        return flashSaleCampaignCache.getFlashSaleCampaign().getPricePromo();
+
+    private String getKeyFSStockCache(String flashSaleId) {
+        return "FLASHSALE:"+ flashSaleId + ":STOCK";
     }
-    private String getKeyFSStockCache(String productId) {
-        return "FLASHSALE:"+ productId + ":STOCK";
-    }
-    public boolean increaseStockCache(String productId, Integer quantity) {
-        String key = getKeyFSStockCache(productId);
+    public boolean increaseStockCache(String flashSaleId, Integer quantity) {
+        String key = getKeyFSStockCache(flashSaleId);
         Long result = redisInfraService.getRedisTemplate().execute(SCRIPT_RESTORE, Collections.singletonList(key), quantity);
         return result != null && result == 1;
     }

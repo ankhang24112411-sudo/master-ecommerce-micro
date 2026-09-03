@@ -10,6 +10,7 @@ import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
+import com.example.product_service.service.cache.flashsale.FlashSaleCacheServiceRefactor;
 import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     private final IdempotencyKeyService idempotencyKeyService;
     private final TransactionTemplate transactionTemplate;
     private final OutboxEventRepository outboxEventRepo;
+    private final FlashSaleCacheServiceRefactor flashSaleCacheServiceRefactor;
     @Override
     public FlashSaleCampaignCache findById(String flashSaleId) {
         FlashSaleCampaignProjection result = flashSaleCampaignRepository.findCacheById(flashSaleId);
@@ -61,11 +63,11 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             return failedQueue("409", "OUT_OF_STOCK");
 
         }
-        BigDecimal unitPrice = stockFlashSaleCache.getEffectivePrice(productId);
-        if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            stockFlashSaleCache.increaseStockCache(productId, quantity);
-            return failedQueue("422", "PRICE_NOT_FOUND");
-        }
+//        BigDecimal unitPrice = flashSaleCacheServiceRefactor.getFlashSaleDetail("xx", );
+//        if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+//            stockFlashSaleCache.increaseStockCache(productId, quantity);
+//            return failedQueue("422", "PRICE_NOT_FOUND");
+//        }
         try {
             OrderQueue queue = transactionTemplate.execute(txStatus -> {
                 String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -82,7 +84,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                         .setCreatedAt(Instant.now());
 
                 PlaceOrderMQMessage message = new PlaceOrderMQMessage(
-                        token, productId, userId, quantity, unitPrice, System.currentTimeMillis()
+                        token, productId, userId, quantity, BigDecimal.ONE, System.currentTimeMillis()
                 );
                 OutboxEvent outboxEvent = new OutboxEvent()
                         .setAggregateId(token)
@@ -106,6 +108,8 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     }
     @Override
     public FlashSaleOrderResponse placeOrderMQv2(String userId, String flashSaleId, int quantity) {
+        FlashSaleCampaignCache flashSaleCampaignCache = flashSaleCacheServiceRefactor.getFlashSaleDetail(flashSaleId,System.currentTimeMillis());
+
         int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
 
         if (redisResult == -1) {
@@ -121,8 +125,8 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             log.info("placeOrderMQ: Redis OOS for flashSaleId={}", flashSaleId);
             return FlashSaleOrderResponse.fail("409", "OUT_OF_STOCK");
         }
+        BigDecimal unitPrice = flashSaleCampaignCache.getFlashSaleCampaign().getPricePromo();
 
-        BigDecimal unitPrice = stockFlashSaleCache.getEffectivePrice(flashSaleId);
         if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
             stockFlashSaleCache.increaseStockCache(flashSaleId, quantity);
             return FlashSaleOrderResponse.fail("422", "PRICE_NOT_FOUND");
@@ -150,7 +154,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                 outboxEventRepo.save(outboxEvent);
                 log.info("placeOrderMQ: queued token={} productId={}", token, flashSaleId);
 
-                return FlashSaleOrderResponse.success(token, flashSaleId, userId, quantity);
+                return FlashSaleOrderResponse.success(token, flashSaleCampaignCache.getProductId(),unitPrice , flashSaleCampaignCache.getProductName(), userId, quantity);
             });
 
         } catch (Exception e) {
@@ -162,5 +166,9 @@ public class FlashSaleServiceImpl implements FlashSaleService {
 
     private OrderQueue failedQueue(String code , String message){
         return new OrderQueue().setStatus(2).setMessage(code +": " + message);
+    }
+    public boolean stockDeduct(String flashSaleId, int quantity){
+        log.info("Run test:decreaseStockLevel1 with: | {}, {} ", flashSaleId, quantity);
+        return flashSaleCampaignRepository.decreaseStockV1(flashSaleId, quantity) > 0;
     }
 }

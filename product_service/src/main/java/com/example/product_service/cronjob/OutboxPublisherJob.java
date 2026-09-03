@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.example.product_service.kafka.KafkaOrderProducer;
 import com.example.product_service.dto.res.PlaceOrderMQMessage;
 import com.example.product_service.entity.OutboxEvent;
+import com.example.product_service.kafka.consumers.KafkaTopicConfig;
 import com.example.product_service.repository.OutboxEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,8 @@ public class OutboxPublisherJob {
     private KafkaOrderProducer kafkaOrderProducer;
 
     // fixedDelay: chờ 1s sau khi lần trước kết thúc, không overlap
-    @Scheduled(fixedDelay = 1000) // fixedRate: chạy mỗi 1s bất kể lần trước đã xong chưa (có thể overlap nếu lần trước chưa xong)
+    @Scheduled(fixedDelay = 1000)
+    // fixedRate: chạy mỗi 1s bất kể lần trước đã xong chưa (có thể overlap nếu lần trước chưa xong)
     public void publish() {
         publishRowByRow();
         // ← đổi thành publishBatch() nếu muốn chạy batch mode
@@ -49,26 +51,37 @@ public class OutboxPublisherJob {
         log.debug("OutboxPublisher [row-by-row]: found {} PENDING events", events.size());
 
         for (OutboxEvent event : events) {
-            try {
-                PlaceOrderMQMessage message = JSON.parseObject(event.getPayload(), PlaceOrderMQMessage.class);
+            String eventType = event.getEventType();
+            switch (eventType) {
+                case ("ORDER_PLACED") -> {
 
-                // Gửi và CHỜ Broker ACK (blocking) — chỉ sau khi Broker xác nhận mới update DB
-                // Đây là Producer ACK (loại 1): broker đã nhận và persist message
-                // Không liên quan đến consumer đã xử lý chưa (loại 2: consumer offset commit)
-                kafkaOrderProducer.sendAndAwaitAck(message);
-                // ack thành công → update status PUBLISHED ngay, giảm window failure tối đa
-                outboxEventRepository.markPublished(event.getId(), LocalDateTime.now());
+                    try {
+                        PlaceOrderMQMessage message = JSON.parseObject(event.getPayload(), PlaceOrderMQMessage.class);
 
-                log.debug("OutboxPublisher [row-by-row]: published eventId={} token={}",
-                        event.getId(), event.getAggregateId());
+                        // Gửi và CHỜ Broker ACK (blocking) — chỉ sau khi Broker xác nhận mới update DB
+                        // Đây là Producer ACK (loại 1): broker đã nhận và persist message
+                        // Không liên quan đến consumer đã xử lý chưa (loại 2: consumer offset commit)
+                        kafkaOrderProducer.sendAndAwaitAck(message);
+                        // ack thành công → update status PUBLISHED ngay, giảm window failure tối đa
+                        outboxEventRepository.markPublished(event.getId(), LocalDateTime.now());
 
-            } catch (Exception e) {
-                // Kafka fail hoặc ACK timeout → KHÔNG update status → cycle sau tự retry
-                log.error("OutboxPublisher [row-by-row]: failed eventId={}, will retry next cycle",
-                        event.getId(), e);
+                        log.debug("OutboxPublisher [row-by-row]: published eventId={} token={}",
+                                event.getId(), event.getAggregateId());
+
+                    } catch (Exception e) {
+                        // Kafka fail hoặc ACK timeout → KHÔNG update status → cycle sau tự retry
+                        log.error("OutboxPublisher [row-by-row]: failed eventId={}, will retry next cycle",
+                                event.getId(), e);
+                    }
+
+                }
+                case ("ORDER_CANCEL") -> {
+
+                }
             }
         }
     }
+
 
     // =========================================================
     // CÁCH 2: Batch
@@ -123,3 +136,10 @@ public class OutboxPublisherJob {
             log.debug("OutboxPublisher [batch]: marked {} events as PUBLISHED", successIds.size());
         }
     }
+//        private String resolveTopic(String eventType) {
+//            return switch (eventType) {
+//                case "ORDER_PLACED" -> KafkaTopicConfig.ORDER_PLACE_TOPIC;
+//                case "ORDER_CANCELLED" -> KafkaTopicConfig.ORDER_CANCEL_TOPIC;
+//                default -> throw new IllegalArgumentException("Unknown event type: " + eventType);
+//            };
+//        }
