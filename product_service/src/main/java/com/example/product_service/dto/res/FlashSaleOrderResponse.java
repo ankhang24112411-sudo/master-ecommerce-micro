@@ -1,4 +1,4 @@
-package com.example.product_service.consumers.dto;
+package com.example.product_service.dto.res;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ public class FlashSaleOrderResponse {
     private String productId;
     private String userId;
     private Integer quantity;
-    // 0=PENDING, 1=SUCCESS, 2=FAILED
+    // 0=PENDING, 2=FAILED
 
     private Integer status;
     private String code;
@@ -29,7 +29,7 @@ public class FlashSaleOrderResponse {
                 .productId(productId)
                 .userId(userId)
                 .quantity(quantity)
-                .status(1)
+                .status(0)
                 .createdAt(Instant.now())
                 .build();
     }

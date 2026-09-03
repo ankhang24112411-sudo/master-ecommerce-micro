@@ -1,4 +1,4 @@
-package com.example.product_service.config;
+package com.example.product_service.infra.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

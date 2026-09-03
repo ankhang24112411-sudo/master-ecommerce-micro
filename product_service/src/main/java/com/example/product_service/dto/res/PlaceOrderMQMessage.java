@@ -1,4 +1,4 @@
-package com.example.product_service.consumers.dto;
+package com.example.product_service.dto.res;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

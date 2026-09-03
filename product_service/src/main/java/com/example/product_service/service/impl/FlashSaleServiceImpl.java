@@ -1,14 +1,13 @@
 package com.example.product_service.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.example.product_service.consumers.dto.FlashSaleOrderResponse;
-import com.example.product_service.consumers.dto.PlaceOrderMQMessage;
+import com.example.product_service.dto.res.FlashSaleOrderResponse;
+import com.example.product_service.dto.res.PlaceOrderMQMessage;
 import com.example.product_service.dto.FlashSaleCampaignProjection;
 import com.example.product_service.entity.*;
 import com.example.product_service.entity.cache.FlashSaleCampaignCache;
 import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
-import com.example.product_service.repository.IdempotencyKeyRepository;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
 import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
@@ -106,31 +105,29 @@ public class FlashSaleServiceImpl implements FlashSaleService {
         }
     }
     @Override
-    public FlashSaleOrderResponse placeOrderMQv2(String userId, String productId, int quantity) {
-        // 1. Trừ kho Redis Lua Script
-        int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(productId, quantity);
+    public FlashSaleOrderResponse placeOrderMQv2(String userId, String flashSaleId, int quantity) {
+        int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
 
         if (redisResult == -1) {
-            log.info("placeOrderMQ: cache miss for productId={}, warming up...", productId);
-            boolean warmedUp = stockFlashSaleCache.addFSStockAvailableToCache(productId);
+            log.info("placeOrderMQ: cache miss for flashSaleId={}, warming up...", flashSaleId);
+            boolean warmedUp = stockFlashSaleCache.addFSStockAvailableToCache(flashSaleId);
             if (!warmedUp) {
                 return FlashSaleOrderResponse.fail("404", "PRODUCT_NOT_FOUND");
             }
-            redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(productId, quantity);
+            redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
         }
 
         if (redisResult == 0) {
-            log.info("placeOrderMQ: Redis OOS for productId={}", productId);
+            log.info("placeOrderMQ: Redis OOS for flashSaleId={}", flashSaleId);
             return FlashSaleOrderResponse.fail("409", "OUT_OF_STOCK");
         }
 
-        BigDecimal unitPrice = stockFlashSaleCache.getEffectivePrice(productId);
+        BigDecimal unitPrice = stockFlashSaleCache.getEffectivePrice(flashSaleId);
         if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            stockFlashSaleCache.increaseStockCache(productId, quantity);
+            stockFlashSaleCache.increaseStockCache(flashSaleId, quantity);
             return FlashSaleOrderResponse.fail("422", "PRICE_NOT_FOUND");
         }
-
-        // 2. Lưu Outbox Event vào DB của Product Service
+ //Transaction to rollback
         try {
             return transactionTemplate.execute(txStatus -> {
                 String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -140,7 +137,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                 }
 
                 PlaceOrderMQMessage message = new PlaceOrderMQMessage(
-                        token, productId, userId, quantity, unitPrice, System.currentTimeMillis()
+                        token, flashSaleId, userId, quantity, unitPrice, System.currentTimeMillis()
                 );
 
                 OutboxEvent outboxEvent = new OutboxEvent()
@@ -151,17 +148,18 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                         .setCreatedAt(Instant.now());
 
                 outboxEventRepo.save(outboxEvent);
-                log.info("placeOrderMQ: queued token={} productId={}", token, productId);
+                log.info("placeOrderMQ: queued token={} productId={}", token, flashSaleId);
 
-                return FlashSaleOrderResponse.success(token, productId, userId, quantity);
+                return FlashSaleOrderResponse.success(token, flashSaleId, userId, quantity);
             });
 
         } catch (Exception e) {
-            stockFlashSaleCache.increaseStockCache(productId, quantity);
-            log.error("placeOrderMQ: transaction failed, compensated Redis for productId={}", productId, e);
+            stockFlashSaleCache.increaseStockCache(flashSaleId, quantity);
+            log.error("placeOrderMQ: transaction failed, compensated Redis for productId={}", flashSaleId, e);
             return FlashSaleOrderResponse.fail("INTERNAL_ERROR", "Lỗi hệ thống, vui lòng thử lại");
         }
     }
+
     private OrderQueue failedQueue(String code , String message){
         return new OrderQueue().setStatus(2).setMessage(code +": " + message);
     }
