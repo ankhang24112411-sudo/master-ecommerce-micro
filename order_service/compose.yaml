@@ -15,8 +15,20 @@ services:
 
     volumes:
       - product_postgres_data:/var/lib/postgresql
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
+
     networks:
-      - keycloak-network
+      ecommerce-shared:
+
+
+
   redis:
     image: redis:7.0-alpine
     container_name: mpm-handover-redis
@@ -25,7 +37,8 @@ services:
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
-
+    networks:
+      ecommerce-shared:
   # UI để quản lý Redis
   redis-insight:
     image: redislabs/redisinsight:1.14.0
@@ -36,13 +49,16 @@ services:
       - redis-insight-data:/data
     depends_on:
       - redis
+    networks:
+      ecommerce-shared:
 
   zookeeper:
     container_name: mpm-handover-zookeeper
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181
-
+    networks:
+      ecommerce-shared:
   kafka:
     container_name: mpm-handover-kafka
     image: wurstmeister/kafka
@@ -59,7 +75,8 @@ services:
     volumes:
       - kafka-data:/kafka
       - /var/run/docker.sock:/var/run/docker.sock
-
+    networks:
+      ecommerce-shared:
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui-mpm-handover-10
@@ -69,6 +86,8 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      ecommerce-shared:
   vti-keycloak:
     image: quay.io/keycloak/keycloak:22.0.5
     container_name: vti-keycloak
@@ -91,9 +110,10 @@ services:
 
     depends_on:
       - postgres
-
     networks:
-      - keycloak-network
+      ecommerce-shared:
+#    networks:
+#      - default
   elasticsearch:
     container_name: vti-elasticsearch
     image: elasticsearch:7.17.10
@@ -110,7 +130,9 @@ services:
         soft: -1
         hard: -1
     networks:
-      - optimize-network
+      ecommerce-shared:
+#    networks:
+#      - default
 
   logstash:
     container_name: vti-logstash
@@ -123,22 +145,58 @@ services:
       - ./logstash/config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     environment:
       LS_JAVA_OPTS: "-Xms256m -Xmx256m"
-    networks:
-      - optimize-network
+#    networks:
+#      - default
     depends_on:
       - elasticsearch
+    networks:
+      ecommerce-shared:
 
   kibana:
     container_name: kb-container
     image: kibana:7.17.10
     environment:
       ELASTICSEARCH_HOSTS: http://vti-elasticsearch:9200
-    networks:
-      - optimize-network
-    depends_on:
-      - elasticsearch
+#    networks:
+#      - optimize-network
+#    depends_on:
+#      - default
     ports:
       - "5601:5601"
+    networks:
+      ecommerce-shared:
+  connect:
+    image: quay.io/debezium/connect:3.6
+    container_name: order-debezium-connect
+    restart: unless-stopped
+
+    ports:
+      - "8083:8083"
+
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: order-connect-group
+
+      CONFIG_STORAGE_TOPIC: order_connect_configs
+      OFFSET_STORAGE_TOPIC: order_connect_offsets
+      STATUS_STORAGE_TOPIC: order_connect_statuses
+
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+
+    depends_on:
+      - kafka
+      - postgres
+    networks:
+      ecommerce-shared:
+#    networks:
+#      - default
 volumes:
   product_postgres_data:
   zookeeper-data:
@@ -147,6 +205,13 @@ volumes:
   redis-insight-data:
 
 networks:
-  keycloak-network:
-    driver: bridge
-  optimize-network:
+  ecommerce-shared:
+    external: true
+#    driver: bridge
+#
+#  keycloak-network:
+#    driver: bridge
+#
+#  optimize-network:
+#    driver: bridge
+

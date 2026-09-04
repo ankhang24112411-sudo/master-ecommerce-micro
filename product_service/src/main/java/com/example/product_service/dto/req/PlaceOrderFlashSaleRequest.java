@@ -3,8 +3,8 @@ package com.example.product_service.dto.req;
 import lombok.Data;
 
 @Data
-public class OrderCreationRequest {
+public class PlaceOrderFlashSaleRequest {
     String userId;
-    String productId;
+    String flashSaleId;
     Integer quantity;
 }

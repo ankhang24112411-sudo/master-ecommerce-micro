@@ -2,8 +2,10 @@ package com.example.order_service.controller;
 
 import com.example.order_service.dtos.BaseResponse;
 import com.example.order_service.dtos.request.OrderRequest;
+import com.example.order_service.dtos.request.PlaceOrderFlashSaleRequest;
 import com.example.order_service.entity.OrderEntity;
 import com.example.order_service.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,5 +36,10 @@ public class OrderController {
     }
     public String fallbackCreateOrder(Throwable throwable){
         return "Too much request";
+    }
+    @PostMapping("/place-order-flashsake")
+    @RateLimiter(name = "backendB", fallbackMethod = "fallbackCreateOrder")
+    ResponseEntity<BaseResponse<OrderEntity>> flashSaleOrderMQ(@Valid @RequestBody PlaceOrderFlashSaleRequest request) {
+        return ResponseEntity.ok().body(new BaseResponse<>(orderService.flashSaleOrderMQ(request),  null));
     }
 }

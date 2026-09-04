@@ -10,6 +10,8 @@ import com.example.order_service.dtos.events.OrderCreatedEvent;
 import com.example.order_service.dtos.events.OrderItemEvent;
 import com.example.order_service.dtos.request.OrderItemRequest;
 import com.example.order_service.dtos.request.OrderRequest;
+import com.example.order_service.dtos.request.PlaceOrderFlashSaleRequest;
+import com.example.order_service.dtos.resp.FlashSaleOrderResponse;
 import com.example.order_service.entity.OrderEntity;
 import com.example.order_service.entity.OrderItemEntity;
 import com.example.order_service.exception.ApplicationErrors;
@@ -141,5 +143,16 @@ public class OrderServiceImpl implements OrderService{
             }
         });
     }
+   public FlashSaleOrderResponse flashSaleOrderMQ(PlaceOrderFlashSaleRequest request){
+    if(request.getFlashSaleId() == null || request.getUserId() == null || request.getQuantity() <= 0){
+        throw ApplicationErrors.INVALID_REQUEST;
+    }
+    return productClient.getFlashSaleResponse(request);
+   }
+
+//    @Override
+//    public void placeOrderMQ(String productId, int quantity) {
+//        int redisResult = stockOrderCacheService.decreaseStockCacheByLUA(productId,quantity );
+//    }
 
 }

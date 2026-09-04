@@ -31,7 +31,6 @@ public class OrderEventConsumer {
     }
 
     @KafkaListener(topics = "inventory-reserved")
-
     @RetryableTopic(attempts = "4", backOff = @BackOff(delay = 2_000, multiplier = 2.0),
             exclude = {NullPointerException.class, IllegalArgumentException.class}
     )

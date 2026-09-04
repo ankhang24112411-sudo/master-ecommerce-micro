@@ -36,14 +36,16 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 50s
         permittedNumberOfCallsInHalfOpenState: 3
+        #3 cái bị lỗi thì chuyển half open
         eventConsumerBufferSize: 10
   ratelimiter:
     instances:
 
       backendA:
-        limitForPeriod: 2
-        limitRefreshPeriod: 10s
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
         timeoutDuration: 0
+        registerHealthIndicatior: true
 
       backendB:
         limitForPeriod: 6
