@@ -10,6 +10,7 @@ import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
+import com.example.product_service.service.cache.flashsale.FlashSaleBloomService;
 import com.example.product_service.service.cache.flashsale.FlashSaleCacheServiceRefactor;
 import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
@@ -33,6 +34,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     private final TransactionTemplate transactionTemplate;
     private final OutboxEventRepository outboxEventRepo;
     private final FlashSaleCacheServiceRefactor flashSaleCacheServiceRefactor;
+    private final FlashSaleBloomService flashSaleBloomService;
     @Override
     public FlashSaleCampaignCache findById(String flashSaleId) {
         FlashSaleCampaignProjection result = flashSaleCampaignRepository.findCacheById(flashSaleId);
@@ -41,9 +43,11 @@ public class FlashSaleServiceImpl implements FlashSaleService {
         flashSaleCampaignCache.setCategoryName(result.getCategoryName());
         return flashSaleCampaignCache;
     }
+    // HUY
     @Override
     public OrderQueue placeOrderMQ(String userId, String productId, int quantity) {
-        //TODO bloom filter
+
+//        if(flashSaleBloomService.checkAndAddUser())
         int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(productId, quantity);
         // -1 : Cannot find from REDIS
         if (redisResult == -1) {
@@ -108,8 +112,10 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     }
     @Override
     public FlashSaleOrderResponse placeOrderMQv2(String userId, String flashSaleId, int quantity) {
-        FlashSaleCampaignCache flashSaleCampaignCache = flashSaleCacheServiceRefactor.getFlashSaleDetail(flashSaleId,System.currentTimeMillis());
 
+        if(flashSaleBloomService.checkAndAddUser(flashSaleId, userId)){
+            return FlashSaleOrderResponse.fail("441", "USER_ALREADY_BOUGHT");
+        }
         int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
 
         if (redisResult == -1) {
@@ -125,6 +131,8 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             log.info("placeOrderMQ: Redis OOS for flashSaleId={}", flashSaleId);
             return FlashSaleOrderResponse.fail("409", "OUT_OF_STOCK");
         }
+
+        FlashSaleCampaignCache flashSaleCampaignCache = flashSaleCacheServiceRefactor.getFlashSaleDetail(flashSaleId,System.currentTimeMillis());
         BigDecimal unitPrice = flashSaleCampaignCache.getFlashSaleCampaign().getPricePromo();
 
         if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
