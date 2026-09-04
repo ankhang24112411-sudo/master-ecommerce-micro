@@ -1,4 +1,4 @@
-package com.example.product_service.kafka.consumers.dto;
+package com.example.product_service.kafka.topic;
 
 import lombok.*;
 

@@ -1,9 +1,13 @@
-package com.example.product_service.kafka.consumers;
+package com.example.product_service.kafka;
 
+import com.alibaba.fastjson.JSON;
 import com.example.product_service.dto.res.PlaceOrderMQMessage;
-import com.example.product_service.kafka.consumers.dto.OrderCreatedEvent;
+import com.example.product_service.entity.OutboxEvent;
+import com.example.product_service.kafka.topic.OrderCancelEvent;
+import com.example.product_service.kafka.topic.OrderCreatedEvent;
 import com.example.product_service.dto.req.LockProductItem;
 import com.example.product_service.dto.req.LockProductReq;
+import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
 import com.example.product_service.service.ProductService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
@@ -12,11 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +33,7 @@ public class KafkaOrderConsumer {
     private final FlashSaleService flashSaleService;
     private final ObjectMapper objectMapper;
     private final StockFlashSaleCache stockFlashSaleCache;
+    private final OutboxEventRepository outboxEventRepo;
     @KafkaListener(topics = "order_created")
     @RetryableTopic(
             attempts = "4",
@@ -66,7 +72,19 @@ public class KafkaOrderConsumer {
         boolean stockDecreased = flashSaleService.stockDeduct(placeOrderMQMessage.getFlashSaleId(), placeOrderMQMessage.getQuantity());
         if(!stockDecreased){
             stockFlashSaleCache.increaseStockCache(flashSaleId, quantity);
-            OrderCancelEvent orderCancelEvent
+            OrderCancelEvent orderCancelEvent = OrderCancelEvent.builder()
+                    .token(placeOrderMQMessage.getToken())
+                    .flashSaleId(placeOrderMQMessage.getFlashSaleId())
+                    .userId(placeOrderMQMessage.getUserId())
+                    .quantity(placeOrderMQMessage.getQuantity())
+                    .build();
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateId(placeOrderMQMessage.getToken())
+                    .eventType("ORDER_CANCEL")
+                    .payload(JSON.toJSONString(orderCancelEvent))
+                    .status(2)
+                    .createdAt(Instant.now()).build();
+            outboxEventRepo.save(outboxEvent);
         }
 
     }

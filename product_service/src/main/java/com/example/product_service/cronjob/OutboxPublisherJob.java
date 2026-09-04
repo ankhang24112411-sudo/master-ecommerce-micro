@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.example.product_service.kafka.KafkaOrderProducer;
 import com.example.product_service.dto.res.PlaceOrderMQMessage;
 import com.example.product_service.entity.OutboxEvent;
-import com.example.product_service.kafka.consumers.KafkaTopicConfig;
+import com.example.product_service.kafka.topic.OrderCancelEvent;
 import com.example.product_service.repository.OutboxEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,11 +77,17 @@ public class OutboxPublisherJob {
                 }
                 case ("ORDER_CANCEL") -> {
 
+                    try {
+                        OrderCancelEvent message = JSON.parseObject(event.getPayload(), OrderCancelEvent.class);
+                        kafkaOrderProducer.sendOrderCancelLowStock(message);
+                        outboxEventRepository.markPublished(event.getId(), LocalDateTime.now());
+                    } catch (Exception e) {
+
+                    }
                 }
             }
         }
     }
-
 
     // =========================================================
     // CÁCH 2: Batch

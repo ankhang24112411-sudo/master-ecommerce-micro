@@ -20,7 +20,7 @@ spring:
     consumer:
       group-id: product-service
       auto-offset-reset: earliest
-      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
 #      JSON bytes → chuỗi JSON.
       properties:
