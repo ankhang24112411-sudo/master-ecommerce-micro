@@ -2,6 +2,13 @@ package com.example.order_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -11,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class OrderItemEntity extends BaseEntity{
+public class OrderItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,8 +32,27 @@ public class OrderItemEntity extends BaseEntity{
     private String productId;
 
     @Column(name = "price")
-    private Integer price;
+    private BigDecimal price;
 
     @Column(name = "quantity")
     private Integer quantity;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
+    @CreatedDate
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @LastModifiedDate
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
 }

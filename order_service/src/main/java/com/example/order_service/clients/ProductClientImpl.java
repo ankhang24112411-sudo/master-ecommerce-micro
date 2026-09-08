@@ -4,6 +4,7 @@ import com.example.order_service.dtos.BaseResponse;
 import com.example.order_service.dtos.clientDTO.ProductDTO;
 import com.example.order_service.dtos.clientDTO.ProductFilter;
 import com.example.order_service.dtos.request.PlaceOrderFlashSaleRequest;
+import com.example.order_service.dtos.resp.FlashSaleOrderResponse;
 import com.example.order_service.exception.ApplicationErrors;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +77,8 @@ public class ProductClientImpl implements ProductClient{
         }
         return response.getData();
     }
-
+    public FlashSaleOrderResponse productServiceFallbackForGetFlashSale(String productId, Throwable throwable) {
+        throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Product Service not response ", throwable);
+    }
 
 }

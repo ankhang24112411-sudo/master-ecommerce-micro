@@ -14,17 +14,20 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+
+      properties:
+        delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
+        request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
+        linger.ms: 0               # Gửi ngay lập tức, không gom batch
 #      Object → JSON bytes.
     consumer:
       group-id: order-service
       auto-offset-reset: earliest
       key-serializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      acks: all
-      properties:
-        delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
-        request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
-        linger.ms: 0               # Gửi ngay lập tức, không gom batch
+      retries: 30
+      compression-type: lz4
 resilience4j:
   circuitbreaker:
     configs:

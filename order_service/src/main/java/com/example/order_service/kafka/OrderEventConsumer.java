@@ -3,12 +3,12 @@ package com.example.order_service.kafka;
 import com.example.order_service.config.utils.OrderStatus;
 import com.example.order_service.kafka.event.InventoryReservedEvent;
 import com.example.order_service.kafka.event.PaymentEvent;
-import com.example.order_service.dtos.events.OrderStockReserveEvent;
+import com.example.order_service.kafka.event.OrderStockReserveEvent;
 import com.example.order_service.entity.OrderEntity;
 import com.example.order_service.entity.OrderItemEntity;
 import com.example.order_service.repository.OrderItemRepository;
-import com.example.order_service.repository.OrderQueueRepository;
 import com.example.order_service.repository.OrderRepository;
+import com.example.order_service.repository.orderdeduction.OrderDeductionDomainService;
 import com.example.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +31,9 @@ import java.time.format.DateTimeFormatter;
 public class OrderEventConsumer {
     private final OrderService orderService;
     private final ObjectMapper objectMapper;
-    private final OrderQueueRepository orderQueueRepo;
     private final OrderRepository orderRepo;
     private final OrderItemRepository orderItemRepo;
-
+    private final OrderDeductionDomainService orderDeductionDomainService;
     @KafkaListener(topics = "payment")
     @RetryableTopic(attempts = "4", backOff = @BackOff(delay = 2_000, multiplier = 2.0),
             exclude = {NullPointerException.class, IllegalArgumentException.class}
@@ -103,14 +102,14 @@ public class OrderEventConsumer {
             dltStrategy = DltStrategy.FAIL_ON_ERROR,
             exclude = {NullPointerException.class, IllegalArgumentException.class}
     )
-    public void processOrderCancelEvent(String orderString) throws JacksonException {
+    public void processOrderStockReservedEvent(String orderString) throws JacksonException {
         OrderStockReserveEvent message = objectMapper.readValue(orderString, OrderStockReserveEvent.class);
         String orderNumber = "MQ-" + message.getUserId() + "-" + System.currentTimeMillis();
         String nTable = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
 
         OrderEntity order = OrderEntity.builder()
                 .customerId(message.getUserId())
-                .status(OrderStatus.PENDING.name())
+                .status(OrderStatus.STOCK_RESERVED.name())
                 .orderNumber(orderNumber)
                 .totalAmount(message.getUnitPrice().multiply(BigDecimal.valueOf(message.getQuantity())))
                 .build();
@@ -121,30 +120,31 @@ public class OrderEventConsumer {
                 .price(message.getUnitPrice())
                 .quantity(message.getQuantity()).build();
 
-        orderRepo.save(order);
-        orderItemRepo.save(oItem);
+        orderDeductionDomainService.insertOrder(nTable, order);
+        orderDeductionDomainService.insertOrderItem(nTable,oItem);
+//        orderRepo.save(order);
+//        orderItemRepo.save(oItem);
     }
+
     @Transactional(rollbackFor = Exception.class)
-    @KafkaListener(topics = "order-stock-reserve-topic", concurrency = "10")
+    @KafkaListener(topics = "order-cancel-topic", concurrency = "10")
     @RetryableTopic(attempts = "4",
             backOff = @BackOff(delay = 2_000, multiplier = 2.0),
             dltStrategy = DltStrategy.FAIL_ON_ERROR,
             exclude = {NullPointerException.class, IllegalArgumentException.class}
     )
-    public void processOrderStockReserveEvent(String orderString) throws JacksonException {
+    public void processOrderStockCancelEvent(String orderString) throws JacksonException {
         OrderStockReserveEvent message = objectMapper.readValue(orderString, OrderStockReserveEvent.class);
         String orderNumber = "MQ-" + message.getUserId() + "-" + System.currentTimeMillis();
         String nTable = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
 
         OrderEntity order = OrderEntity.builder()
                 .customerId(message.getUserId())
-                .status(OrderStatus.PENDING.name())
+                .status(OrderStatus.CANCELLED.name())
                 .orderNumber(orderNumber)
                 .totalAmount(message.getUnitPrice().multiply(BigDecimal.valueOf(message.getQuantity())))
                 .build();
+        orderDeductionDomainService.insertOrder(nTable, order);
 
-
-        orderRepo.save(order);
-        orderItemRepo.save(oItem);
     }
 }

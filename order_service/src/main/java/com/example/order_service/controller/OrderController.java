@@ -39,7 +39,7 @@ public class OrderController {
     }
     @PostMapping("/place-order-flashsake")
     @RateLimiter(name = "backendB", fallbackMethod = "fallbackCreateOrder")
-    ResponseEntity<BaseResponse<OrderEntity>> flashSaleOrderMQ(@Valid @RequestBody PlaceOrderFlashSaleRequest request) {
+    ResponseEntity<BaseResponse<?>> flashSaleOrderMQ(@Valid @RequestBody PlaceOrderFlashSaleRequest request) {
         return ResponseEntity.ok().body(new BaseResponse<>(orderService.flashSaleOrderMQ(request),  null));
     }
 }

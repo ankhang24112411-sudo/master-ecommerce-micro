@@ -2,6 +2,8 @@ package com.example.order_service.dtos.clientDTO;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Builder
@@ -10,7 +12,7 @@ import lombok.*;
 public class ProductDTO {
     private String id;
     private String name;
-    private Integer price;
+    private BigDecimal price;
     private Integer stock;
     private String categoryId;
 }

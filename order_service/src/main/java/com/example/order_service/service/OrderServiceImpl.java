@@ -2,12 +2,15 @@ package com.example.order_service.service;
 
 import com.example.order_service.clients.ProductClient;
 import com.example.order_service.config.utils.OrderStatus;
-import com.example.order_service.consumer.event.InventoryReservedEvent;
-import com.example.order_service.consumer.event.PaymentEvent;
+import com.example.order_service.dtos.resp.OrderDTO;
+import com.example.order_service.dtos.resp.OrderItemDTO;
+import com.example.order_service.dtos.resp.PagedOrdersDTO;
+import com.example.order_service.kafka.event.InventoryReservedEvent;
+import com.example.order_service.kafka.event.PaymentEvent;
 import com.example.order_service.dtos.clientDTO.ProductDTO;
 import com.example.order_service.dtos.clientDTO.ProductFilter;
-import com.example.order_service.dtos.events.OrderCreatedEvent;
-import com.example.order_service.dtos.events.OrderItemEvent;
+import com.example.order_service.kafka.event.OrderCreatedEvent;
+import com.example.order_service.kafka.event.OrderItemEvent;
 import com.example.order_service.dtos.request.OrderItemRequest;
 import com.example.order_service.dtos.request.OrderRequest;
 import com.example.order_service.dtos.request.PlaceOrderFlashSaleRequest;
@@ -17,11 +20,18 @@ import com.example.order_service.entity.OrderItemEntity;
 import com.example.order_service.exception.ApplicationErrors;
 import com.example.order_service.repository.OrderItemRepository;
 import com.example.order_service.repository.OrderRepository;
+import com.example.order_service.repository.orderdeduction.OrderDeductionDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +44,7 @@ public class OrderServiceImpl implements OrderService{
     private final ProductClient productClient;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepo;
+    private final OrderDeductionDomainService orderDeductionDomainService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     @Override
     public OrderEntity createOrder(OrderRequest request) {
@@ -53,11 +64,11 @@ public class OrderServiceImpl implements OrderService{
         OrderEntity order = new OrderEntity();
         order.setCustomerId(request.getCustomerId());
         order.setStatus(OrderStatus.PENDING.name());
-        order.setTotalAmount(0);
+        order.setTotalAmount(BigDecimal.valueOf(0));
 
         OrderEntity savedOrder = orderRepository.save(order);
 
-        int totalAmount = 0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItemEntity> orderItems = new ArrayList<>();
 
         for (var itemDTO : request.getOrderItems()) {
@@ -73,7 +84,7 @@ public class OrderServiceImpl implements OrderService{
                 throw ApplicationErrors.PRODUCT_NOT_FOUND;
             }
 
-            Integer price = productDTO.getPrice();
+            BigDecimal price = productDTO.getPrice();
 
             OrderItemEntity item = new OrderItemEntity();
             item.setOrderId(savedOrder.getId());
@@ -83,7 +94,7 @@ public class OrderServiceImpl implements OrderService{
 
             orderItems.add(item);
 
-            totalAmount += price * itemDTO.getQuantity();
+            totalAmount = price.multiply(BigDecimal.valueOf(itemDTO.getQuantity()));
         }
 
         orderItemRepo.saveAll(orderItems);
@@ -155,4 +166,102 @@ public class OrderServiceImpl implements OrderService{
 //        int redisResult = stockOrderCacheService.decreaseStockCacheByLUA(productId,quantity );
 //    }
 
+    private String extractYearMonthFromOrderNumber(String orderNumber){
+
+        try{
+            String[] parts = orderNumber.split("-");
+            if(parts.length < 2){
+                throw new IllegalStateException("Invalid order number format");
+            }
+            long timestamp = Long.parseLong(parts[parts.length - 1]);
+            LocalDateTime dateTime = Instant.ofEpochMilli(timestamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+
+            return dateTime.format(DateTimeFormatter.ofPattern("yyyyMM"));
+
+        }catch (Exception e){
+            throw new RuntimeException("Failed to extract yearMonth from orderNumber: " + orderNumber, e);
+
+        }
+    }
+    public PagedOrdersDTO findPage(String yearMonth, Integer lastId, int limit ){
+        validateYearMonth(yearMonth);
+        if(limit < 0){
+            throw new IllegalArgumentException("limit must be greater than 0");
+        }
+        List<Object[]> results = orderDeductionDomainService.findPage(yearMonth, lastId,limit);
+        List<OrderDTO> items = results.stream().map(this::toOrderDTO).toList();
+
+        boolean hasMore = results.size() == limit ;
+        Integer nextCursor = hasMore ? items.get(items.size() - 1).getId() : null;
+        return new PagedOrdersDTO(items, nextCursor,hasMore);
+    }
+    private OrderDTO toOrderDTO(Object[] row){
+        requireColumnsName(row,"orders_yyyyMM");
+        return new OrderDTO(
+                (Integer) row[0],
+                (String) row[1],
+                (String) row[2],
+                (BigDecimal) row[3],
+                (String) row[4],
+                toBoolean(row[5]),
+                toLocalDateTime(row[6]),     // created_date
+                (String) row[7],              // created_by
+                toLocalDateTime(row[8]),     // last_modified_date
+                (String) row[9]               // last_modified_by
+        );
+    }
+    private OrderItemDTO toOrderItemDTO(Object[] row){
+        requireColumnsName(row,"orders_items_yyyyMM");
+        return new OrderItemDTO(
+                (Integer) row[0],
+                (Integer) row[1],
+                (String) row[2],
+                (BigDecimal ) row[3],
+                row[4] == null ? null : ((Number) row[4]).intValue(),
+                toBoolean(row[5]),
+                toLocalDateTime(row[6]),     // created_date
+                (String) row[7],              // created_by
+                toLocalDateTime(row[8]),     // last_modified_date
+                (String) row[9]               // last_modified_by
+                );
+    }
+   private Boolean toBoolean(Object val){
+
+        if (val == null){
+            return null;
+        }
+        if(val instanceof Boolean bool){
+            return bool;
+        }
+        if(val instanceof Number number){
+            return number.intValue() != 0;
+        }
+        throw new IllegalArgumentException("Unsupported is_deleted type: " +val.getClass().getName());
+   }
+   private LocalDateTime toLocalDateTime(Object value){
+        if(value == null){
+            return null;
+        }
+        if(value instanceof LocalDateTime dateTime){
+            return dateTime;
+        }
+        if(value instanceof Timestamp timestamp){
+            return timestamp.toLocalDateTime();
+        }
+       throw new IllegalArgumentException("Unsupported time type: " + value.getClass().getName());
+
+   }
+   private void validateYearMonth(String yearMonth){
+        if(yearMonth == null || !yearMonth.matches("[0-9]{4}(0[1-9]|1[0-1])")){
+            throw new IllegalArgumentException("yearMonth should match formats");
+        }
+   }
+    private void requireColumnsName(Object[] row, String table) {
+        if (row == null || row.length != 10) {
+            throw new IllegalArgumentException("Expected 10 columns for " + table
+                    + "; check the existing table against the repository DDL");
+        }
+    }
 }

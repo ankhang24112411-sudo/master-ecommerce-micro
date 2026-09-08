@@ -1,8 +1,7 @@
 package com.example.order_service.service;
 
 import com.example.order_service.config.utils.OrderStatus;
-import com.example.order_service.consumer.event.InventoryReservedEvent;
-import com.example.order_service.consumer.event.PaymentEvent;
+import com.example.order_service.kafka.event.InventoryReservedEvent;
 import com.example.order_service.dtos.request.OrderRequest;
 import com.example.order_service.dtos.request.PlaceOrderFlashSaleRequest;
 import com.example.order_service.dtos.resp.FlashSaleOrderResponse;
@@ -15,7 +14,7 @@ public interface OrderService {
 
   void  handleInventoryReservedEvent(InventoryReservedEvent inventoryReservedEvent);
 
-    void handlePaymentEvent(com.example.order_service.consumer.event.PaymentEvent paymentEvent);
+    void handlePaymentEvent(com.example.order_service.kafka.event.PaymentEvent paymentEvent);
 
 //   void placeOrderMQ(String productId, int quantity);
 FlashSaleOrderResponse flashSaleOrderMQ(PlaceOrderFlashSaleRequest request);
