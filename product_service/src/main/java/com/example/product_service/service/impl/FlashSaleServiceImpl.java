@@ -10,9 +10,9 @@ import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
-import com.example.product_service.service.cache.flashsale.FlashSaleBloomService;
+import com.example.product_service.service.cache.flashsale.bloom.FlashSaleBloomService;
 import com.example.product_service.service.cache.flashsale.FlashSaleCacheServiceRefactor;
-import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
+import com.example.product_service.service.IdempotencyKeyService;
 import com.example.product_service.service.cache.flashsale.StockFlashSaleCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,17 +86,17 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                         .setQuantity(quantity)
                         .setUserId(userId)
                         .setCreatedAt(Instant.now());
-
-                PlaceOrderMQMessage message = new PlaceOrderMQMessage(
-                        token, productId, userId, quantity, BigDecimal.ONE, System.currentTimeMillis()
-                );
-                OutboxEvent outboxEvent = new OutboxEvent()
-                        .setAggregateId(token)
-                        .setEventType("ORDER_PLACED")
-                        .setPayload(JSON.toJSONString(message))
-                        .setStatus(0)
-                        .setCreatedAt(Instant.now());
-                outboxEventRepo.save(outboxEvent);
+//
+//                PlaceOrderMQMessage message = new PlaceOrderMQMessage(
+//                        token, productId, userId, quantity, BigDecimal.ONE
+//                );
+//                OutboxEvent outboxEvent = new OutboxEvent()
+//                        .setAggregateId(token)
+//                        .setEventType("ORDER_PLACED")
+//                        .setPayload(JSON.toJSONString(message))
+//                        .setStatus(0)
+//                        .setCreatedAt(Instant.now());
+//                outboxEventRepo.save(outboxEvent);
                 log.info("placeOrderMQ: queeued token ={}  {}", token, productId);
 
                 return q;
@@ -116,6 +116,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
         if(flashSaleBloomService.checkAndAddUser(flashSaleId, userId)){
             return FlashSaleOrderResponse.fail("441", "USER_ALREADY_BOUGHT");
         }
+        //TODO da tru roi
         int redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
 
         if (redisResult == -1) {
@@ -139,7 +140,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             stockFlashSaleCache.increaseStockCache(flashSaleId, quantity);
             return FlashSaleOrderResponse.fail("422", "PRICE_NOT_FOUND");
         }
- //Transaction to rollback
+ //Transaction to rollback , rollback together 2 commands
         try {
             return transactionTemplate.execute(txStatus -> {
                 String token = "MQ-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -149,20 +150,19 @@ public class FlashSaleServiceImpl implements FlashSaleService {
                 }
 
                 PlaceOrderMQMessage message = new PlaceOrderMQMessage(
-                        token, flashSaleId, userId, quantity, unitPrice, System.currentTimeMillis()
+                        token, flashSaleId, userId, quantity, unitPrice, flashSaleCampaignCache.getProductId()
                 );
 
-                OutboxEvent outboxEvent = new OutboxEvent()
+              OutboxEvent outboxEvent = new OutboxEvent()
                         .setAggregateId(token)
                         .setEventType("ORDER_PLACED")
                         .setPayload(JSON.toJSONString(message))
-                        .setStatus(0)
                         .setCreatedAt(Instant.now());
 
                 outboxEventRepo.save(outboxEvent);
                 log.info("placeOrderMQ: queued token={} productId={}", token, flashSaleId);
 
-                return FlashSaleOrderResponse.success(token, flashSaleCampaignCache.getProductId(),unitPrice , flashSaleCampaignCache.getProductName(), userId, quantity);
+                return FlashSaleOrderResponse.success(token, flashSaleCampaignCache.getProductId(), userId,quantity , unitPrice ,flashSaleCampaignCache.getProductName());
             });
 
         } catch (Exception e) {

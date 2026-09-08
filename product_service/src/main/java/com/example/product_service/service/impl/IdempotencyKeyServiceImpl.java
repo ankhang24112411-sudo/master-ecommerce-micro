@@ -1,7 +1,7 @@
 package com.example.product_service.service.impl;
 
 import com.example.product_service.repository.IdempotencyKeyRepository;
-import com.example.product_service.service.cache.flashsale.IdempotencyKeyService;
+import com.example.product_service.service.IdempotencyKeyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

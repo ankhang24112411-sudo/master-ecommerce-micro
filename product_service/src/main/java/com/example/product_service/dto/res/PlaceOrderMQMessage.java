@@ -19,5 +19,5 @@ public class PlaceOrderMQMessage {
 
     private int quantity;
     private BigDecimal unitPrice;
-    private long timestamp;
+    private String productId;
 }

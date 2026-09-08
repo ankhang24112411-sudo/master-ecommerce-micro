@@ -5,7 +5,10 @@ import com.example.product_service.kafka.KafkaOrderProducer;
 import com.example.product_service.dto.res.PlaceOrderMQMessage;
 import com.example.product_service.entity.OutboxEvent;
 import com.example.product_service.kafka.topic.OrderCancelEvent;
+import com.example.product_service.kafka.topic.OrderStockReserveEvent;
 import com.example.product_service.repository.OutboxEventRepository;
+import com.example.product_service.service.OutboxEventService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,15 +21,14 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class OutboxPublisherJob {
 
     private static final int BATCH_SIZE = 500;
 
-    @Autowired
-    private OutboxEventRepository outboxEventRepository;
-
-    @Autowired
-    private KafkaOrderProducer kafkaOrderProducer;
+    private final OutboxEventRepository outboxEventRepository;
+    private final KafkaOrderProducer kafkaOrderProducer;
+    private final OutboxEventService outboxEventService;
 
     // fixedDelay: chờ 1s sau khi lần trước kết thúc, không overlap
     @Scheduled(fixedDelay = 1000)
@@ -46,7 +48,7 @@ public class OutboxPublisherJob {
     // - Throughput thấp hơn batch khi có nhiều PENDING rows
     // =========================================================
     private void publishRowByRow() {
-        List<OutboxEvent> events = outboxEventRepository.findPendingBatch(BATCH_SIZE); // 500 rows mỗi lần, nếu nhiều hơn sẽ phải chờ nhiều lần mới hết
+        List<OutboxEvent> events = outboxEventService.findPendingBatch(BATCH_SIZE); // 500 rows mỗi lần, nếu nhiều hơn sẽ phải chờ nhiều lần mới hết
 
         log.debug("OutboxPublisher [row-by-row]: found {} PENDING events", events.size());
 
@@ -63,9 +65,9 @@ public class OutboxPublisherJob {
                         // Không liên quan đến consumer đã xử lý chưa (loại 2: consumer offset commit)
                         kafkaOrderProducer.sendAndAwaitAck(message);
                         // ack thành công → update status PUBLISHED ngay, giảm window failure tối đa
-                        outboxEventRepository.markPublished(event.getId(), LocalDateTime.now());
+                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
 
-                        log.debug("OutboxPublisher [row-by-row]: published eventId={} token={}",
+                        log.debug("OutboxPublisher ORDER_PLACE [row-by-row]: published eventId={} token={}",
                                 event.getId(), event.getAggregateId());
 
                     } catch (Exception e) {
@@ -80,8 +82,20 @@ public class OutboxPublisherJob {
                     try {
                         OrderCancelEvent message = JSON.parseObject(event.getPayload(), OrderCancelEvent.class);
                         kafkaOrderProducer.sendOrderCancelLowStock(message);
-                        outboxEventRepository.markPublished(event.getId(), LocalDateTime.now());
+                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
                     } catch (Exception e) {
+                        log.debug("OutboxPublisher ORDER_CANCEL [row-by-row]: published eventId={} token={}",event.getId() , event.getAggregateId());
+
+                    }
+                }
+                case ("ORDER_STOCK_RESERVE") -> {
+
+                    try {
+                        OrderStockReserveEvent message = JSON.parseObject(event.getPayload(), OrderStockReserveEvent.class);
+                        kafkaOrderProducer.sendOrderStockReserved(message);
+                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
+                    } catch (Exception e) {
+                        log.debug("OutboxPublisher ORDER_STOCK_RESERVE [row-by-row]: published eventId={} token={}",event.getId() , event.getAggregateId());
 
                     }
                 }
@@ -100,7 +114,7 @@ public class OutboxPublisherJob {
     // - Debug khó hơn khi partial failure (300/500 success, 200 fail)
     // =========================================================
     private void publishBatch() {
-        List<OutboxEvent> events = outboxEventRepository.findPendingBatch(BATCH_SIZE);
+        List<OutboxEvent> events = outboxEventService.findPendingBatch(BATCH_SIZE);
         if (events.isEmpty()) return;
 
         log.debug("OutboxPublisher [batch]: processing {} PENDING events", events.size());
@@ -138,10 +152,11 @@ public class OutboxPublisherJob {
 
         // Một lần UPDATE duy nhất cho toàn bộ success — đây là lợi thế của batch
         if (!successIds.isEmpty()) {
-            outboxEventRepository.markPublishedBatch(successIds, LocalDateTime.now());
+            outboxEventService.markPublishedBatch(successIds, LocalDateTime.now());
             log.debug("OutboxPublisher [batch]: marked {} events as PUBLISHED", successIds.size());
         }
     }
+}
 //        private String resolveTopic(String eventType) {
 //            return switch (eventType) {
 //                case "ORDER_PLACED" -> KafkaTopicConfig.ORDER_PLACE_TOPIC;

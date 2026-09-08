@@ -12,4 +12,5 @@ public interface FlashSaleService {
     FlashSaleOrderResponse placeOrderMQv2(String userId, String productId, int quantity);
     public boolean stockDeduct(String flashSaleId, int quantity);
 
-    }
+
+}

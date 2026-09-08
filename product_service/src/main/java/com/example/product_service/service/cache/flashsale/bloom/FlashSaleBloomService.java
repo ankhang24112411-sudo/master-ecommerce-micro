@@ -1,4 +1,4 @@
-package com.example.product_service.service.cache.flashsale;
+package com.example.product_service.service.cache.flashsale.bloom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

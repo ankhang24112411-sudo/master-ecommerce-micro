@@ -20,10 +20,10 @@ public class FlashSalePurchase extends BaseEntity{
     private String id;
 
     @Column(name="campaign_id", nullable=false)
-    private Long campaignId;
+    private String campaignId;
 
     @Column(name="user_id", nullable=false)
-    private Long userId;
+    private String userId;
 
 
     @Column(name="order_id")

@@ -4,7 +4,9 @@ package com.example.product_service.controller;
 import com.example.product_service.dto.BaseResponse;
 import com.example.product_service.dto.clients.ProductDTO;
 import com.example.product_service.dto.clients.ProductFilter;
+import com.example.product_service.dto.req.PlaceOrderFlashSaleRequest;
 import com.example.product_service.entity.Product;
+import com.example.product_service.service.FlashSaleService;
 import com.example.product_service.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequestMapping("/v1/products")
 public class ProductController {
  private final ProductService productService;
+ private final FlashSaleService flashSaleService;
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse<Product>> getDetail(@PathVariable String id, @RequestParam (name= "version",required = false)Long version) {
         return ResponseEntity.ok(new BaseResponse<>(productService.getProductById(id, version), "success"));
@@ -32,11 +35,13 @@ public ResponseEntity<BaseResponse<List<ProductDTO>>> search(@RequestBody Produc
     return ResponseEntity.ok(new BaseResponse<>(products, "success"));
 }
     @PostMapping("/ids")
-
     public BaseResponse<List<ProductDTO>> decreaseQuantityByIds(@RequestBody @Valid List<ProductDTO> request) {
-
         productService.decreaseQuantityByIds(request);
-
         return new BaseResponse<>(productService.decreaseQuantityByIds(request), "ok");
     }
+    @PostMapping("/place-order")
+    public BaseResponse<?> placeOrderMQ(@RequestBody @Valid PlaceOrderFlashSaleRequest request) {
+        return new BaseResponse<>(flashSaleService.placeOrderMQv2(request.getUserId(),request.getFlashSaleId(),request.getQuantity()), "ok");
+    }
+
 }

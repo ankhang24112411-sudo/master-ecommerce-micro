@@ -22,8 +22,14 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
+      acks: all
+      retries: 30
+      compression-type: lz4
 #      JSON bytes → chuỗi JSON.
       properties:
+        delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
+        request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
+        linger.ms: 0               # Gửi ngay lập tức, không gom batch
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: false
   data:

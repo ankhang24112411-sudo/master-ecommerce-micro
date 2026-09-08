@@ -7,6 +7,7 @@ import com.example.product_service.kafka.topic.OrderCancelEvent;
 import com.example.product_service.kafka.topic.OrderCreatedEvent;
 import com.example.product_service.dto.req.LockProductItem;
 import com.example.product_service.dto.req.LockProductReq;
+import com.example.product_service.kafka.topic.OrderStockReserveEvent;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
 import com.example.product_service.service.ProductService;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -56,12 +58,16 @@ public class KafkaOrderConsumer {
         lockProductReq.setOrderId(orderCreatedEvent.getOrderId());
         productService.lock(lockProductReq);
     }
-    @KafkaListener(topics = "order-place-topic", concurrency = "3")
+
+
+    @KafkaListener(topics = "order-place-topic", concurrency = "10")
     @RetryableTopic(
             attempts = "4",
             backOff = @BackOff(delay = 2_000, multiplier = 2.0),
+            dltStrategy = DltStrategy.FAIL_ON_ERROR,
             exclude = {NullPointerException.class, IllegalArgumentException.class}
     )
+    //DEDUCTION => orderstock reserve event
     @Transactional(rollbackFor = Error.class)
     public void processOrderStockAndFlashSalePurchase(String orderString) throws JacksonException{
         PlaceOrderMQMessage placeOrderMQMessage = objectMapper.readValue(orderString ,PlaceOrderMQMessage.class );
@@ -82,11 +88,22 @@ public class KafkaOrderConsumer {
                     .aggregateId(placeOrderMQMessage.getToken())
                     .eventType("ORDER_CANCEL")
                     .payload(JSON.toJSONString(orderCancelEvent))
-                    .status(2)
                     .createdAt(Instant.now()).build();
             outboxEventRepo.save(outboxEvent);
+            // TODO send email to user
         }
-
+        OrderStockReserveEvent orderStockReserveEvent = OrderStockReserveEvent.builder()
+                .token(placeOrderMQMessage.getToken())
+                .userId(placeOrderMQMessage.getUserId())
+                .unitPrice(placeOrderMQMessage.getUnitPrice())
+                .quantity(placeOrderMQMessage.getQuantity())
+                .productId(placeOrderMQMessage.getProductId()).build();
+        OutboxEvent outboxEvent = OutboxEvent.builder()
+                .aggregateId(placeOrderMQMessage.getToken())
+                .eventType("ORDER_STOCK_RESERVE")
+                .payload(JSON.toJSONString(orderStockReserveEvent))
+                .createdAt(Instant.now()).build();
+        outboxEventRepo.save(outboxEvent);
     }
 
 }

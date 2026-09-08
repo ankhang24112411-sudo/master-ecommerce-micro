@@ -15,6 +15,7 @@ public  interface FlashSaleCampaignProjection  {
 
     String getProductName();
 
+    BigDecimal getPrice();
 
     String getCategoryName();
 }

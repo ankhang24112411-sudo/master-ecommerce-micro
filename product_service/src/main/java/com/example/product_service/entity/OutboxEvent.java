@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Table(name = "outbox_event", indexes = {
-        @Index(name = "idx_status_created", columnList = "status, created_at")
+        @Index(name = "idx_status_created", columnList = "eventType, created_at")
 })
 public class OutboxEvent {
 
@@ -35,7 +35,6 @@ public class OutboxEvent {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String payload;
 
-    private int status;
 
     private Instant createdAt;
 }

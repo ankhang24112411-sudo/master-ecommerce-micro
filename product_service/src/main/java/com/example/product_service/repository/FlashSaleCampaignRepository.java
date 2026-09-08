@@ -18,6 +18,7 @@ public interface FlashSaleCampaignRepository extends JpaRepository<FlashSaleCamp
 select 
     f as flashSaleCampaign,
     p.name as productName,
+    f.pricePromo as price,
     c.name as categoryName
 from FlashSaleCampaign f
 join Product p 

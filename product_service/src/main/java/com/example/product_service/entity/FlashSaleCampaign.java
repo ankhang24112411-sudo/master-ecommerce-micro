@@ -20,17 +20,15 @@ public class FlashSaleCampaign extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private Long id;
+    private String id;
 
 
     @Column(name="product_id", nullable=false)
-    private Long productId;
-
+    private String productId;
 
 
     @Column(name="start_at")
     private Instant startAt;
-
 
 
     @Column(name="end_at")
@@ -40,24 +38,18 @@ public class FlashSaleCampaign extends BaseEntity{
     private Integer stock;
 
 
-
     @Column(name="price_promo")
     private BigDecimal pricePromo;
-
-
 
     @Column(name="max_per_user")
     private Integer maxPerUser;
 
-
-
-    @Column(name="created_at")
-    private Instant createdAt;
-
-
-
-    @Column(name="updated_at")
-    private Instant updatedAt;
+//
+//    @Column(name="created_at")
+//    private Instant createdAt;
+//
+//    @Column(name="updated_at")
+//    private Instant updatedAt;
 
 
 
