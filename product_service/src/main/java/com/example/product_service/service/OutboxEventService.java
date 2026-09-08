@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface OutboxEventService {
     List<OutboxEvent> findPendingBatch(int limit);
-    void markPublished(Long id, LocalDateTime publishedAt);
-    void markPublishedBatch(List<Long> ids, LocalDateTime publishedAt);
+    void markPublished(String id, LocalDateTime publishedAt);
+    void markPublishedBatch(List<String> ids, LocalDateTime publishedAt);
 }

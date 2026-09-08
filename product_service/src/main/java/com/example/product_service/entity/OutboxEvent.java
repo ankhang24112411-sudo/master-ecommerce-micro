@@ -24,7 +24,7 @@ public class OutboxEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private Long id;
+    private String id;
 
     @Column(nullable = false, length = 64)
     private String aggregateId;

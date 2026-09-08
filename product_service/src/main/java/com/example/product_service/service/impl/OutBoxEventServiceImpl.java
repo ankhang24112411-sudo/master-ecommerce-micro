@@ -23,12 +23,12 @@ public class OutBoxEventServiceImpl implements OutboxEventService {
 
     @Override
     @Transactional
-    public void markPublished(Long id, LocalDateTime publishedAt) {
+    public void markPublished(String id, LocalDateTime publishedAt) {
         outboxEventRepo.markPublishedById(id, publishedAt);
     }
 
     @Override
-    public void markPublishedBatch(List<Long> ids, LocalDateTime publishedAt) {
+    public void markPublishedBatch(List<String> ids, LocalDateTime publishedAt) {
 
     }
 }

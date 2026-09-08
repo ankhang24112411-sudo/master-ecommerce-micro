@@ -16,22 +16,24 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    #      Object → JSON bytes.
-    consumer:
-      group-id: product-service
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
       acks: all
-      retries: 30
-      compression-type: lz4
-#      JSON bytes → chuỗi JSON.
       properties:
         delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
         request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
         linger.ms: 0               # Gửi ngay lập tức, không gom batch
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: false
+    #      Object → JSON bytes.
+    consumer:
+      group-id: product-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
+      retries: 30
+      compression-type: lz4
+#      JSON bytes → chuỗi JSON.
+
   data:
     redis:
       host: localhost

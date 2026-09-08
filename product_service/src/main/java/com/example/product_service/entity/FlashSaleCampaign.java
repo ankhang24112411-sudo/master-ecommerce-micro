@@ -3,7 +3,10 @@ package com.example.product_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +18,7 @@ import java.time.Instant;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FlashSaleCampaign extends BaseEntity{
+public class FlashSaleCampaign {
 
 
     @Id
@@ -44,6 +47,24 @@ public class FlashSaleCampaign extends BaseEntity{
     @Column(name="max_per_user")
     private Integer maxPerUser;
 
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
+    @CreatedDate
+    @Column(name = "created_date")
+    private Instant createdDate;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "last_modified_date")
+    private Instant lastModifiedDate;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
 //
 //    @Column(name="created_at")
 //    private Instant createdAt;

@@ -13,7 +13,7 @@ import com.google.common.cache.CacheBuilder;
 
 import java.util.concurrent.TimeUnit;
 
-@Service
+@Service("productCacheService")
 @Slf4j(topic = "PRODUCT-CACHE-SERVICE")
 @RequiredArgsConstructor
 public class ProductCacheService {

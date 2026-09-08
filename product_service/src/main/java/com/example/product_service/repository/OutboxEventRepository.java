@@ -18,5 +18,5 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent,String>
 
     @Modifying
     @Query("UPDATE OutboxEvent e SET e.status = 1, e.publishedAt = :publishedAt WHERE e.id = :id")
-    int markPublishedById(@Param("id") Long id, @Param("publishedAt") LocalDateTime publishedAt);
+    int markPublishedById(@Param("id") String id, @Param("publishedAt") LocalDateTime publishedAt);
 }

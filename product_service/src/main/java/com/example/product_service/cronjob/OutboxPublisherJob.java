@@ -120,7 +120,7 @@ public class OutboxPublisherJob {
         log.debug("OutboxPublisher [batch]: processing {} PENDING events", events.size());
 
         // Gửi tất cả async, lưu future theo eventId
-        List<Long> eventIds = new ArrayList<>();
+        List<String> eventIds = new ArrayList<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (OutboxEvent event : events) {
@@ -139,7 +139,7 @@ public class OutboxPublisherJob {
         }
 
         // Chờ tất cả futures, lọc ra những cái thành công
-        List<Long> successIds = new ArrayList<>();
+        List<String> successIds = new ArrayList<>();
         for (int i = 0; i < futures.size(); i++) {
             try {
                 futures.get(i).get(); // blocking wait cho từng future
