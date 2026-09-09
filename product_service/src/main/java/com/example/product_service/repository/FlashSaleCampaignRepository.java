@@ -31,14 +31,14 @@ where f.id = :id
 
     @Modifying
     @Transactional
-    @Query("update FlashSaleCampaign f set f.lastModifiedDate = CURRENT_TIMESTAMP," +
+    @Query("update FlashSaleCampaign f set f.lastModifiedDate = current_instant," +
              " f.stock =:oldStockAvailable - :quantity " +
             "where f.id =:flashSaleId and f.stock =:oldStockAvailable")
     int decreaseStockV3CAS(@Param("flashSaleId") String flashSaleId , @Param("oldStockAvailable")int oldStockAvailable, int quantity );
 
     @Modifying
     @Transactional
-    @Query("update FlashSaleCampaign f set f.lastModifiedDate = CURRENT_TIMESTAMP," +
+    @Query("update FlashSaleCampaign f set f.lastModifiedDate = current_instant," +
             " f.stock = f.stock - :quantity " +
             "where f.id =:flashSaleId")
     int decreaseStockV1(@Param("flashSaleId") String flashSaleId , @Param("oldStockAvailable")int quantity );

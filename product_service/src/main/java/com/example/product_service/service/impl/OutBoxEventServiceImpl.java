@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,12 +24,12 @@ public class OutBoxEventServiceImpl implements OutboxEventService {
 
     @Override
     @Transactional
-    public void markPublished(String id, LocalDateTime publishedAt) {
+    public void markPublished(String id, Instant publishedAt) {
         outboxEventRepo.markPublishedById(id, publishedAt);
     }
 
     @Override
-    public void markPublishedBatch(List<String> ids, LocalDateTime publishedAt) {
+    public void markPublishedBatch(List<String> ids, Instant publishedAt) {
 
     }
 }

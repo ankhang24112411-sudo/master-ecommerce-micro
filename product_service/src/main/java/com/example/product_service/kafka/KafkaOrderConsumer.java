@@ -87,8 +87,8 @@ public class KafkaOrderConsumer {
             OutboxEvent outboxEvent = OutboxEvent.builder()
                     .aggregateId(placeOrderMQMessage.getToken())
                     .eventType("ORDER_CANCEL")
-                    .payload(JSON.toJSONString(orderCancelEvent))
-                    .createdAt(Instant.now()).build();
+                    .status(0)
+                    .payload(JSON.toJSONString(orderCancelEvent)).build();
             outboxEventRepo.save(outboxEvent);
             // TODO send email to user
         }
@@ -101,8 +101,8 @@ public class KafkaOrderConsumer {
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(placeOrderMQMessage.getToken())
                 .eventType("ORDER_STOCK_RESERVE")
-                .payload(JSON.toJSONString(orderStockReserveEvent))
-                .createdAt(Instant.now()).build();
+                .status(0)
+                .payload(JSON.toJSONString(orderStockReserveEvent)).build();
         outboxEventRepo.save(outboxEvent);
     }
 

@@ -5,13 +5,14 @@ import com.example.product_service.entity.cache.ProductCache;
 import com.example.product_service.infra.cache.RedisInfraService;
 import com.example.product_service.infra.redission.RedisDistributedLocker;
 import com.example.product_service.infra.redission.RedisDistributedService;
-import com.example.product_service.service.ProductService;
+import com.example.product_service.repository.ProductRepository;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -20,7 +21,9 @@ import java.util.concurrent.TimeUnit;
 public class ProductCacheServiceRefactor {
     private final RedisDistributedService redisDistributedService;
     private final RedisInfraService redisInfraService;
-    private final ProductService productService;
+    private final ProductRepository productRepo;
+
+//    private final ProductService productService;
 
     private final static Cache<String, ProductCache> productLocalCache = CacheBuilder.newBuilder()
             .initialCapacity(10)
@@ -81,12 +84,12 @@ public class ProductCacheServiceRefactor {
         if(productCache != null){
             return productCache;
         }
-        Product product = productService.getById(productId);
+        Optional<Product> product = productRepo.findById(productId);
 
-        if(product == null){
+        if(product.isEmpty()){
             return null;
         }
-        productCache = new ProductCache().withClone(product).withVersion(System.currentTimeMillis());
+        productCache = new ProductCache().withClone(product.orElse(null)).withVersion(System.currentTimeMillis());
         redisInfraService.setObject(genEventItemKey(productId),productCache);
         return productCache;
         } catch (InterruptedException e) {

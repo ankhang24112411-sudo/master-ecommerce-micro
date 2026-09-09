@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class OutboxPublisherJob {
                         // Không liên quan đến consumer đã xử lý chưa (loại 2: consumer offset commit)
                         kafkaOrderProducer.sendAndAwaitAck(message);
                         // ack thành công → update status PUBLISHED ngay, giảm window failure tối đa
-                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
+                        outboxEventService.markPublished(event.getId(), Instant.now());
 
                         log.debug("OutboxPublisher ORDER_PLACE [row-by-row]: published eventId={} token={}",
                                 event.getId(), event.getAggregateId());
@@ -82,7 +83,7 @@ public class OutboxPublisherJob {
                     try {
                         OrderCancelEvent message = JSON.parseObject(event.getPayload(), OrderCancelEvent.class);
                         kafkaOrderProducer.sendOrderCancelLowStock(message);
-                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
+                        outboxEventService.markPublished(event.getId(), Instant.now());
                     } catch (Exception e) {
                         log.debug("OutboxPublisher ORDER_CANCEL [row-by-row]: published eventId={} token={}",event.getId() , event.getAggregateId());
 
@@ -93,7 +94,7 @@ public class OutboxPublisherJob {
                     try {
                         OrderStockReserveEvent message = JSON.parseObject(event.getPayload(), OrderStockReserveEvent.class);
                         kafkaOrderProducer.sendOrderStockReserved(message);
-                        outboxEventService.markPublished(event.getId(), LocalDateTime.now());
+                        outboxEventService.markPublished(event.getId(), Instant.now());
                     } catch (Exception e) {
                         log.debug("OutboxPublisher ORDER_STOCK_RESERVE [row-by-row]: published eventId={} token={}",event.getId() , event.getAggregateId());
 
@@ -152,7 +153,7 @@ public class OutboxPublisherJob {
 
         // Một lần UPDATE duy nhất cho toàn bộ success — đây là lợi thế của batch
         if (!successIds.isEmpty()) {
-            outboxEventService.markPublishedBatch(successIds, LocalDateTime.now());
+            outboxEventService.markPublishedBatch(successIds, Instant.now());
             log.debug("OutboxPublisher [batch]: marked {} events as PUBLISHED", successIds.size());
         }
     }

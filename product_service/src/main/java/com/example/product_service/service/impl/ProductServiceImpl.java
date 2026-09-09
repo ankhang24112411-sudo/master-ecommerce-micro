@@ -1,5 +1,6 @@
 package com.example.product_service.service.impl;
 
+import com.example.product_service.entity.cache.FlashSaleCampaignCache;
 import com.example.product_service.kafka.topic.InventoryReservedEvent;
 import com.example.product_service.entity.OrderQueue;
 import com.example.product_service.dto.clients.ProductValid;
@@ -15,6 +16,7 @@ import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.ProductService;
+import com.example.product_service.service.cache.flashsale.FlashSaleCacheServiceRefactor;
 import com.example.product_service.service.cache.prod.ProductCacheServiceRefactor;
 import com.example.product_service.service.cache.prod.StockOrderCacheService;
 import jakarta.transaction.Transactional;
@@ -313,5 +315,6 @@ public class ProductServiceImpl implements ProductService {
     private OrderQueue failedQueue(String code , String message){
         return new OrderQueue().setStatus(2).setMessage(code +": " + message);
     }
+
 }
 

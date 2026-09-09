@@ -10,6 +10,7 @@ import com.example.product_service.exception.ApplicationErrors;
 import com.example.product_service.repository.FlashSaleCampaignRepository;
 import com.example.product_service.repository.OutboxEventRepository;
 import com.example.product_service.service.FlashSaleService;
+import com.example.product_service.service.ProductService;
 import com.example.product_service.service.cache.flashsale.bloom.FlashSaleBloomService;
 import com.example.product_service.service.cache.flashsale.FlashSaleCacheServiceRefactor;
 import com.example.product_service.service.IdempotencyKeyService;
@@ -33,8 +34,9 @@ public class FlashSaleServiceImpl implements FlashSaleService {
     private final IdempotencyKeyService idempotencyKeyService;
     private final TransactionTemplate transactionTemplate;
     private final OutboxEventRepository outboxEventRepo;
-    private final FlashSaleCacheServiceRefactor flashSaleCacheServiceRefactor;
     private final FlashSaleBloomService flashSaleBloomService;
+    private final ProductService productService;
+    private final FlashSaleCacheServiceRefactor flashSaleCacheServiceRefactor;
     @Override
     public FlashSaleCampaignCache findById(String flashSaleId) {
         FlashSaleCampaignProjection result = flashSaleCampaignRepository.findCacheById(flashSaleId);
@@ -132,7 +134,6 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             log.info("placeOrderMQ: Redis OOS for flashSaleId={}", flashSaleId);
             return FlashSaleOrderResponse.fail("409", "OUT_OF_STOCK");
         }
-
         FlashSaleCampaignCache flashSaleCampaignCache = flashSaleCacheServiceRefactor.getFlashSaleDetail(flashSaleId,System.currentTimeMillis());
         BigDecimal unitPrice = flashSaleCampaignCache.getFlashSaleCampaign().getPricePromo();
 
@@ -156,8 +157,8 @@ public class FlashSaleServiceImpl implements FlashSaleService {
               OutboxEvent outboxEvent = new OutboxEvent()
                         .setAggregateId(token)
                         .setEventType("ORDER_PLACED")
-                        .setPayload(JSON.toJSONString(message))
-                        .setCreatedAt(Instant.now());
+                         .setStatus(0)
+                        .setPayload(JSON.toJSONString(message));
 
                 outboxEventRepo.save(outboxEvent);
                 log.info("placeOrderMQ: queued token={} productId={}", token, flashSaleId);

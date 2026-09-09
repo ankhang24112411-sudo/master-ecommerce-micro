@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/flashsale-engine")
 public class FlashSaleController {
     private final FlashSaleService flashSaleService;
-    @GetMapping("/")
+    @PostMapping("/")
     public ResponseEntity<BaseResponse<?>> flashSaleOrderMQ(@RequestBody PlaceOrderFlashSaleRequest request) {
         return ResponseEntity.ok(new BaseResponse<>(flashSaleService.placeOrderMQv2(request.getUserId(), request.getFlashSaleId(), request.getQuantity()), "ok"));
     }
