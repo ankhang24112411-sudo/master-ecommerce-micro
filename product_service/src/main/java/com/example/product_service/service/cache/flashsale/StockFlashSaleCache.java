@@ -17,7 +17,7 @@ import java.util.List;
 public class StockFlashSaleCache {
     // Lua script: Trừ stock trong Redis một cách ATOMIC
     private static final String LUA_FLASHSALE_STOCK_DEDUCT =
-            // Lấy stock hiện tại từ Redis
+            // Lấy stock hiện tại từ Redis ( -1 warmup , 1 thanh cong , 0 la ko du)
             "local stock = redis.call('GET', KEYS[1]); " +
 
                     // Không có key stock trong Redis -> cache miss

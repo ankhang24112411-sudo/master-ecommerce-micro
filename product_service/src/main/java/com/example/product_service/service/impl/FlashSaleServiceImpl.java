@@ -127,6 +127,7 @@ public class FlashSaleServiceImpl implements FlashSaleService {
             if (!warmedUp) {
                 return FlashSaleOrderResponse.fail("404", "PRODUCT_NOT_FOUND");
             }
+            //warm up ok thi se tru stock
             redisResult = stockFlashSaleCache.decreaseFSStockCacheByLUA(flashSaleId, quantity);
         }
 
