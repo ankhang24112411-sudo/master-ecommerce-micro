@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j(topic = "FLASH-SALE-BLOOM-SERVICE")
 public class FlashSaleBloomService {
     private final StringRedisTemplate redisTemplate;
-
+    private static final String BUYERS_KEY = "flashsales:{%s}:buyers";
     /**
      * Kiểm tra và thêm User vào Redis Bloom Filter
      * Sử dụng lệnh trực tiếp của RedisBloom module: BF.EXISTS và BF.ADD
@@ -49,5 +49,20 @@ public class FlashSaleBloomService {
             }
         }
         return false;
+    }
+    public boolean hasPurchased(String flashSaleId , String userId){
+        String key = BUYERS_KEY.formatted(flashSaleId);
+        Boolean result = redisTemplate.opsForSet().isMember(flashSaleId,userId);
+        return Boolean.TRUE.equals(result);
+    }
+    public boolean addToPurchased(String flashSaleId, String userId){
+        String key = BUYERS_KEY.formatted(flashSaleId );
+        Long result = redisTemplate.opsForSet().add(flashSaleId, userId);
+        return Long.valueOf(1L).equals(result);
+    }
+    public long countBuyers(String flashSaleId){
+        String key = BUYERS_KEY.formatted(flashSaleId );
+        Long result = redisTemplate.opsForSet().size(key);
+        return result == null ? 0 : result;
     }
 }
