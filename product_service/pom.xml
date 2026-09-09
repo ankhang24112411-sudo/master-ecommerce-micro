@@ -147,8 +147,7 @@
         </dependency>
         <dependency>
             <groupId>org.redisson</groupId>
-<!--            <artifactId>redisson-spring-boot-starter</artifactId>-->
-            <artifactId>redisson</artifactId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
             <version>4.6.1</version>
         </dependency>
         <dependency>
