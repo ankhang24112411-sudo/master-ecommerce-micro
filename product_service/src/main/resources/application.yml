@@ -6,6 +6,7 @@ eureka:
 spring:
   application:
     name: product-service
+
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5435/product_db}
     username: postgres
@@ -13,56 +14,62 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      auto-offset-reset: latest
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       acks: all
+      compression-type: lz4
+      retries: 30
+
       properties:
-        delivery.timeout.ms: 30000 # Tổng thời gian tối đa để retry và gửi tin nhắn
-        request.timeout.ms: 15000  # Thời gian chờ phản hồi cho từng request đơn lẻ
-        linger.ms: 0               # Gửi ngay lập tức, không gom batch
-        spring.json.trusted.packages: "*"
-        spring.json.use.type.headers: false
-    #      Object → JSON bytes.
+        delivery.timeout.ms: 30000
+        request.timeout.ms: 15000
+        linger.ms: 0
+        spring.json.add.type.headers: true
+
     consumer:
       group-id: product-service
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer:  org.apache.kafka.common.serialization.StringDeserializer
-      retries: 30
-      compression-type: lz4
-#      JSON bytes → chuỗi JSON.
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+
+      properties:
+        spring.json.value.default.type: com.example.product_service.dto.res.PlaceOrderMQMessage
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "com.example.product_service.dto.res"
 
   data:
     redis:
       host: localhost
       port: 6379
       password: ""
+
       lettuce:
         pool:
           max-active: 8
           max-idle: 8
           min-idle: 0
           max-wait: -1ms
+
         connect-timeout: 30000
+
   cache:
     type: redis
     redis:
       time-to-live: 60000
+
+  jpa:
+    show-sql: true
+
 logging:
   level:
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
     org.springframework.web.servlet.mvc.method.annotation: TRACE
-    org.springframework.cache: trace
-    com.github.benmanes.caffeine: debug
-    org.springframework.data.redis: debug
-jpa:
-  show-sql: true
+    org.springframework.cache: TRACE
+    com.github.benmanes.caffeine: DEBUG
+    org.springframework.data.redis: DEBUG
+
 server:
   port: 8088
-
-
-
-

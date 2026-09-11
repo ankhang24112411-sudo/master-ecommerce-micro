@@ -1,0 +1,29 @@
+services:
+
+  postgres:
+    image: postgis/postgis:18-3.6
+    container_name: notif-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: product_db
+
+    ports:
+      - "5438:5432"
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
+
+    volumes:
+      - product_postgres_data:/var/lib/postgresql
+    networks:
+      ecommerce-shared:
+        aliases:
+          - notifications-db
